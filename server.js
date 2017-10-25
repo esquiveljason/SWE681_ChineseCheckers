@@ -5,10 +5,10 @@ var https = require('https');
 var path = require('path');
 const port = 8000;
 
-
+app.use(express.static(path.join(__dirname,'/public')));
 
 app.get('/', (request, response) => {
-  response.sendFile(path.join(__dirname+'/index.html'));
+  response.sendFile(path.join(__dirname, 'client'));
 });
 
 app.get('/earth', (request, response) => {
