@@ -4,37 +4,14 @@ var https = require('https');
 var path = require('path');
 var bodyParser = require('body-parser');
 
+var routes = require('./routes/index');
+
+// Init App
 var app = express();
 
 const port = 8000;
-const logDir = 'log';
 
-if(!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir);
-}
-
-var winston = require('winston');
-
-const tsFormat = () => (new Date()).toLocaleString() ;
-
-const logger = new (winston.Logger)({
-  level: 'info',
-  transports: [
-    new winston.transports.Console(
-      {
-        timestamp: tsFormat,
-      }
-    ),
-    new winston.transports.File(
-      {
-      filename: `${logDir}/server.log`,
-      timestamp: tsFormat,
-      json: false
-      }
-    )
-  ]
-});
-
+const logger = require('./logger');
 const morgan = require('morgan');
 
 app.use(morgan('dev', {
@@ -49,32 +26,13 @@ app.use(morgan('dev', {
     }, stream: process.stdout
 }));
 
-
+// Body Parser Middleware
 app.use(bodyParser.urlencoded({extended : true}));
-app.use(express.urlencoded());
+//app.use(express.urlencoded());
 
-app.use(express.static(path.join(__dirname,'/public')));
-
-app.get('/', (request, response) => {
-  response.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.post('/login', (request, response) => {
-  //response.send(request.body.username +request.body.password);
-  response.sendFile(path.join(__dirname,'/public/images/earth.gif'));
-})
-app.get('/test', (request, response) => {
-  response.redirect('/');
-});
-
-app.get('/earth', (request, response) => {
-  response.sendFile(path.join(__dirname,'/public/images/earth.gif'));
-});
-
-app.get('*', (request, response) => {
-  response.status(404).send('Page not found!!!!!!!!!!!!!!!!11')
-});
-
+// Set Static Folder
+app.use(express.static(path.join(__dirname,'public')));
+app.use('/', routes);
 
 const options = {
   key: fs.readFileSync('ssl/priv.key'),
