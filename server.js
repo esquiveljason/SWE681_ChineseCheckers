@@ -1,8 +1,10 @@
 var express = require('express');
 var fs = require('fs');
-var app = express();
 var https = require('https');
 var path = require('path');
+var bodyParser = require('body-parser');
+
+var app = express();
 
 const port = 8000;
 const logDir = 'log';
@@ -48,12 +50,19 @@ app.use(morgan('dev', {
 }));
 
 
+app.use(bodyParser.urlencoded({extended : true}));
+app.use(express.urlencoded());
+
 app.use(express.static(path.join(__dirname,'/public')));
 
 app.get('/', (request, response) => {
   response.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+app.post('/login', (request, response) => {
+  //response.send(request.body.username +request.body.password);
+  response.sendFile(path.join(__dirname,'/public/images/earth.gif'));
+})
 app.get('/test', (request, response) => {
   response.redirect('/');
 });
