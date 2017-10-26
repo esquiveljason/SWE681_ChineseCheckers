@@ -17,6 +17,11 @@ router.post('/login', (request, response) => {
 router.get('/register', (request, response) => {
   response.sendFile(path.join(__dirname,'/../public/register.html'));
 });
+
+router.post('/register', (request, response) => {
+  response.send(request.body.firstname+request.body.lastname+
+  request.body.username+request.body.password+request.body.password2);
+});
 router.get('/earth', (request, response) => {
   response.sendFile(path.join(__dirname,'/../public/images/earth.gif'));
 });
