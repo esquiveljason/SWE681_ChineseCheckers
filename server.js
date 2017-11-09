@@ -3,8 +3,16 @@ var fs = require('fs');
 var https = require('https');
 var path = require('path');
 var bodyParser = require('body-parser');
+var mysql = require('mysql');
 
 var routes = require('./routes/index');
+
+// Init mysql Connection
+var mysqlcon = mysql.createConnection({
+  host: "localhost",
+  user: "jason",
+  password: "esquivel"
+});
 
 // Init App
 var app = express();
@@ -25,6 +33,11 @@ app.use(morgan('dev', {
         return res.statusCode >= 400
     }, stream: process.stdout
 }));
+
+mysqlcon.connect(function(err) {
+  if(err) throw err;
+  logger.info("Connected to mysql");
+});
 
 // Body Parser Middleware
 app.use(bodyParser.urlencoded({extended : true}));
