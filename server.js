@@ -12,7 +12,7 @@ var app = express();
 
 const port = 8000;
 
-const mysqlcon = require('./mysql');
+
 
 const logger = require('./logger');
 const morgan = require('morgan');
@@ -28,11 +28,6 @@ app.use(morgan('dev', {
         return res.statusCode >= 400
     }, stream: process.stdout
 }));
-
-mysqlcon.connect(function(err) {
-  if(err) throw err;
-  logger.info("Connected to mysql");
-});
 
 // Body Parser Middleware
 app.use(bodyParser.urlencoded({extended : true}));
