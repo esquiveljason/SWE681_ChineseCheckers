@@ -24,7 +24,7 @@ mysqlpool.getConnection(function(err, connection){
             + 'firstname VARCHAR(30),'
             + 'lastname VARCHAR(30),'
             + 'username VARCHAR(30),'
-            + 'password VARCHAR(30),'
+            + 'password VARCHAR(80),'
             + 'PRIMARY KEY(id)'
             +  ')',
             function (err, results, fields) {

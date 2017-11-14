@@ -3,16 +3,12 @@ var fs = require('fs');
 var https = require('https');
 var path = require('path');
 var bodyParser = require('body-parser');
-
-
 var routes = require('./routes/index');
 
 // Init App
 var app = express();
 
 const port = 8000;
-
-
 
 const logger = require('./logger');
 const morgan = require('morgan');

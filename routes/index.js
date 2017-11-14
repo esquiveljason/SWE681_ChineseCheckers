@@ -1,6 +1,9 @@
 var express = require('express');
 var path = require('path');
 var mysql = require('mysql');
+var bcrypt = require('bcryptjs');
+
+const { check, validationResult } = require('express-validator/check');
 var router = express.Router();
 require('console.table');
 
@@ -36,32 +39,35 @@ router.post('/register_page', (request, response) => {
   response.redirect('/register');
 });
 
-router.post('/register', (request, response) => {
+router.post('/register', [
+  check('firstname')
+    .isLength({min: 1}).withMessage("FirstName must be entered"),
+  check('lastname')
+    .isLength({min: 1}).withMessage("LastName must be entered"),
+  check('username')
+    .isLength({min: 1}).withMessage("UserName must be entered"),
+  check('password')
+    .isLength({ min: 10, max: 72}).withMessage("Passwords must be between 10 and 72 characters"),
+  check('password2')
+    .custom((value, { req }) => value === req.body.password).withMessage("Must match Password")
+
+], (request, response) => {
+
   var firstname = request.body.firstname;
   var lastname  = request.body.lastname;
   var username  = request.body.username;
   var password  = request.body.password;
 
-  var sql_stmt = "INSERT INTO users (firstname, lastname, username, password) values (?,?,?,?)";
-  var values = [firstname, lastname, username, password];
+  const errors = validationResult(request);
 
-  sql_stmt = mysql.format(sql_stmt, values);
+  if(!errors.isEmpty()) {
+    console.log(errors.mapped());
+    response.redirect('/register');
+  } else {
+    addUser(firstname, lastname, username, password);
+    response.redirect('/');
+  }
 
-  mysqlpool.getConnection(function(err, connection) {
-    if(err) throw err;
-    connection.query(sql_stmt, function (err, results, fields) {
-        if (err) throw err;
-        logger.info('Created new User with id ' + results.insertId);
-      });
-    listUsers(connection);
-    connection.release();
-  });
-
-
-
-  response.redirect('/home');
-  //response.send(request.body.firstname+request.body.lastname+
-  //request.body.username+request.body.password+request.body.password2);
 });
 router.get('/earth', (request, response) => {
   response.sendFile(path.join(__dirname,'/../public/images/earth.gif'));
@@ -85,4 +91,29 @@ function listUsers(connection) {
       logger.info("Total rows returned: " + rows.length);
   });
 }
+
+function addUser(firstname, lastname, username, password) {
+  bcrypt.genSalt(10, function(err, salt) {
+    bcrypt.hash(password, salt, function(err, hash) {
+      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password) values (?,?,?,?)";
+      var values = [firstname, lastname, username, hash];
+
+      sql_stmt = mysql.format(sql_stmt, values);
+
+      mysqlpool.getConnection(function(err, connection) {
+        if(err) throw err;
+        connection.query(sql_stmt, function (err, results, fields) {
+            if (err) throw err;
+            logger.info('Created new User with id ' + results.insertId);
+          });
+        listUsers(connection);
+        connection.release();
+      });
+    });
+  });
+
+}
+
+
+
 module.exports = router;
