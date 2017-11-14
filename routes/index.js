@@ -1,11 +1,10 @@
 var express = require('express');
 var path = require('path');
 var mysql = require('mysql');
-var bcrypt = require('bcryptjs');
 
 const { check, validationResult } = require('express-validator/check');
 var router = express.Router();
-require('console.table');
+
 
 const mysqlpool = require('../mysql');
 const logger = require('../logger');
@@ -59,12 +58,11 @@ router.post('/register', [
   var password  = request.body.password;
 
   const errors = validationResult(request);
-
   if(!errors.isEmpty()) {
     console.log(errors.mapped());
     response.redirect('/register');
   } else {
-    addUser(firstname, lastname, username, password);
+    mysqlpool.addUser(firstname, lastname, username, password);
     response.redirect('/');
   }
 
@@ -76,44 +74,5 @@ router.get('/earth', (request, response) => {
 router.get('*', (request, response) => {
   response.status(404).send('Page not found!!!!!!!!!!!!!!!!11')
 });
-
-
-function listUsers(connection) {
-  sql_stmt = "SELECT * FROM users;";
-
-  connection.query(sql_stmt,function (err, rows){
-      logger.info();
-      logger.info("Artists Listing");
-      logger.info();
-
-      console.table(rows);
-
-      logger.info("Total rows returned: " + rows.length);
-  });
-}
-
-function addUser(firstname, lastname, username, password) {
-  bcrypt.genSalt(10, function(err, salt) {
-    bcrypt.hash(password, salt, function(err, hash) {
-      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password) values (?,?,?,?)";
-      var values = [firstname, lastname, username, hash];
-
-      sql_stmt = mysql.format(sql_stmt, values);
-
-      mysqlpool.getConnection(function(err, connection) {
-        if(err) throw err;
-        connection.query(sql_stmt, function (err, results, fields) {
-            if (err) throw err;
-            logger.info('Created new User with id ' + results.insertId);
-          });
-        listUsers(connection);
-        connection.release();
-      });
-    });
-  });
-
-}
-
-
 
 module.exports = router;
