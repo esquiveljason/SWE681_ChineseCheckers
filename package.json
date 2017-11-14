@@ -1,7 +1,7 @@
 {
-  "name": "testexpress",
+  "name": "Chinese Checkers Game",
   "version": "1.0.0",
-  "description": "test express",
+  "description": "Implement multiplayer game of chinese checkers with login and registration page",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
