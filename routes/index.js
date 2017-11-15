@@ -100,8 +100,15 @@ router.post('/register', [
     console.log(errors.mapped());
     response.redirect('/register');
   } else {
-    mysqlpool.addUser(firstname, lastname, username, password);
-    response.redirect('/');
+    mysqlpool.getUserByUsername(username, function(user, foundUser) {
+      if(!foundUser){
+        mysqlpool.addUser(firstname, lastname, username, password);
+        response.redirect('/');
+      } else {
+        logger.info("Registration - Username already exists");
+        response.redirect('/register');
+      }
+    });
   }
 
 });

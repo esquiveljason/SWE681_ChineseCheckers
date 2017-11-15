@@ -75,7 +75,12 @@ module.exports.addUser = function(firstname, lastname, username, password) {
     });
   });
 }
-
+/*
+ * username - username entered by users
+ * callback
+ *  user - User object holding user data
+ *  foundUser - boolean, true if found user in db
+ */
 module.exports.getUserByUsername = function(username, callback) {
   var sql_stmt = "SELECT * FROM users WHERE username  = ?";
   var values = [username];
@@ -87,11 +92,13 @@ module.exports.getUserByUsername = function(username, callback) {
     if(err) throw err;
     connection.query(sql_stmt, function (err, results, fields) {
       if(err) throw err;
+      // Single match was found, should never be more than 1
       if(results.length === 1) {
         user = results[0];
         logger.info(results.length);
         callback(user, true);
       }
+      // No matches where found
       else {
         callback(null, false);
       }
