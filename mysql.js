@@ -87,14 +87,14 @@ module.exports.getUserByUsername = function(username, callback) {
     if(err) throw err;
     connection.query(sql_stmt, function (err, results, fields) {
       if(err) throw err;
-      /*
-      logger.info(results[0].username);
-      logger.info(results[0].firstname);
-      logger.info(results[0].lastname);
-      */
-      //logger.info(results);
-      user = results[0];
-      callback(user);
+      if(results.length === 1) {
+        user = results[0];
+        logger.info(results.length);
+        callback(user, true);
+      }
+      else {
+        callback(null, false);
+      }
     });
     connection.release();
   });

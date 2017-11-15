@@ -1,5 +1,6 @@
 var express = require('express');
 var path = require('path');
+var bcrypt = require('bcryptjs');
 var passport = require('passport');
 var LocalStragety = require('passport-local').Strategy;
 const { check, validationResult } = require('express-validator/check');
@@ -38,17 +39,35 @@ router.post('/login', [
 ], (request, response) => {
 
     var username = request.body.username;
-    var password = request.body.password;
+    var candidatePassword = request.body.password;
 
     const errors = validationResult(request);
     if(!errors.isEmpty()) {
       console.log(errors.mapped());
       response.redirect('/');
     } else {
-      response.redirect('/home');
-      mysqlpool.getUserByUsername(username, function(user) {
-        logger.info("User - ");
-        logger.info(user);
+
+      mysqlpool.getUserByUsername(username, function(user, foundUser) {
+        if(foundUser){
+          logger.info(user.firstname);
+          logger.info(user.lastname);
+          logger.info(user.username);
+          logger.info(user.password);
+
+          // compare password with database password
+          bcrypt.compare(candidatePassword, user.password, function(err, isMatch) {
+              if(isMatch) {
+                logger.info("Succesful login");
+                response.redirect('/home');
+              } else {
+                logger.info("Unsuccesful Login - Password does not match");
+                response.redirect('/');
+              }
+          });
+        } else {
+          logger.info("Unsuccesful Login - Cannot find user");
+          response.redirect('/');
+        }
       });
     }
 });
