@@ -1,7 +1,7 @@
 var express = require('express');
 var path = require('path');
-var mysql = require('mysql');
-
+var passport = require('passport');
+var LocalStragety = require('passport-local').Strategy;
 const { check, validationResult } = require('express-validator/check');
 var router = express.Router();
 
@@ -30,8 +30,27 @@ router.get('/logout', (request, response) => {
   response.redirect("/");
 });
 
-router.post('/login', (request, response) => {
-  response.redirect('/home');
+router.post('/login', [
+    check('username')
+      .isLength({min:1}).withMessage('Username must be entered'),
+    check('password')
+      .isLength({min:1}).withMessage('Password must be entered')
+], (request, response) => {
+
+    var username = request.body.username;
+    var password = request.body.password;
+
+    const errors = validationResult(request);
+    if(!errors.isEmpty()) {
+      console.log(errors.mapped());
+      response.redirect('/');
+    } else {
+      response.redirect('/home');
+      mysqlpool.getUserByUsername(username, function(user) {
+        logger.info("User - ");
+        logger.info(user);
+      });
+    }
 });
 
 router.post('/register_page', (request, response) => {
@@ -66,9 +85,6 @@ router.post('/register', [
     response.redirect('/');
   }
 
-});
-router.get('/earth', (request, response) => {
-  response.sendFile(path.join(__dirname,'/../public/images/earth.gif'));
 });
 
 router.get('*', (request, response) => {

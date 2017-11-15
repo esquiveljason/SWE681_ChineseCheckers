@@ -18,10 +18,10 @@ mysqlpool.getConnection(function(err, connection){
   logger.info("Connected to mysql");
   connection.query('CREATE DATABASE IF NOT EXISTS chinesecheckersdb', function (err, results, fields) {
     if (err) throw err;
-    logger.info(results);
+    //logger.info(results);
     connection.query('USE chinesecheckersdb', function (err, results, fields) {
         if (err) throw err;
-        logger.info(results);
+        //logger.info(results);
         connection.query('CREATE TABLE IF NOT EXISTS users('
             + 'id INT NOT NULL AUTO_INCREMENT,'
             + 'firstname VARCHAR(30),'
@@ -32,7 +32,7 @@ mysqlpool.getConnection(function(err, connection){
             +  ')',
             function (err, results, fields) {
               if (err) throw err;
-              logger.info(results);
+              //logger.info(results);
             }
         );
     });
@@ -58,7 +58,7 @@ module.exports.listUsers = function(connection) {
 module.exports.addUser = function(firstname, lastname, username, password) {
   bcrypt.genSalt(10, function(err, salt) {
     bcrypt.hash(password, salt, function(err, hash) {
-      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password) values (?,?,?,?)";
+      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password) VALUES (?,?,?,?)";
       var values = [firstname, lastname, username, hash];
 
       sql_stmt = mysql.format(sql_stmt, values);
@@ -73,5 +73,29 @@ module.exports.addUser = function(firstname, lastname, username, password) {
         mysqlpool.listUsers();
       });
     });
+  });
+}
+
+module.exports.getUserByUsername = function(username, callback) {
+  var sql_stmt = "SELECT * FROM users WHERE username  = ?";
+  var values = [username];
+  var user;
+
+  sql_stmt = mysql.format(sql_stmt, values);
+
+  mysqlpool.getConnection(function(err, connection) {
+    if(err) throw err;
+    connection.query(sql_stmt, function (err, results, fields) {
+      if(err) throw err;
+      /*
+      logger.info(results[0].username);
+      logger.info(results[0].firstname);
+      logger.info(results[0].lastname);
+      */
+      //logger.info(results);
+      user = results[0];
+      callback(user);
+    });
+    connection.release();
   });
 }
