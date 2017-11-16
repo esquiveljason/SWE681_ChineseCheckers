@@ -12,23 +12,32 @@ const logger = require('../logger');
 
 // Get Homepage
 router.get('/', (request, response) => {
-  response.sendFile(path.join(__dirname, '/../public/login.html'));
+  //response.sendFile(path.join(__dirname, '/../public/login.html'));
+  response.render('login', {layout: false});
 });
 
 router.get('/register', (request, response) => {
-  response.sendFile(path.join(__dirname,'/../public/register.html'));
+  //response.sendFile(path.join(__dirname,'/../public/register.html'));
+  response.render('register', {layout: false});
 });
 
 router.get('/home', (request, response) => {
-  response.sendFile(path.join(__dirname, '/../public/home.html'));
+  //response.sendFile(path.join(__dirname, '/../public/home.html'));
+  response.render('home');
 });
 
 router.get('/scores', (request, response) => {
-  response.sendFile(path.join(__dirname, '/../public/scores.html'));
+  //response.sendFile(path.join(__dirname, '/../public/scores.html'));
+  response.render('scores');
 });
 
 router.get('/logout', (request, response) => {
   response.redirect("/");
+});
+
+router.get('/game', (request, response) => {
+    //response.sendFile(path.join(__dirname, '/../public/game.html'));
+    response.render('game');
 });
 
 router.post('/login', [

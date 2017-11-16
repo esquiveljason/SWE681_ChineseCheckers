@@ -5,6 +5,9 @@
     <title>App</title>
     <link rel="stylesheet" href="/css/bootstrap.css">
     <link rel="stylesheet" href="/css/narrow-jumbotron.css">
+    <script src="/js/p5.min.js"></script>
+    <script src="/js/addons/p5.dom.min.js"></script>
+    <script src="/js/addons/p5.sound.min.js"></script>
   </head>
   <body>
     <div class="container">
@@ -12,10 +15,10 @@
         <nav>
           <ul class="nav nav-pills float-right">
             <li class="nav-item">
-              <a class="nav-link" href="/home">Home <span class="sr-only">(current)</span></a>
+              <a class="nav-link active" href="/home">Home <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-              <a class="nav-link active" href="/scores">Scores</a>
+              <a class="nav-link" href="/scores">Scores</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="/logout">Logout</a>
@@ -25,15 +28,7 @@
         <h3 class="text-muted">Chinese Checkers</h3>
       </header>
 
-
-      <div class="row marketing">
-        <div class="col-lg-6">
-          <h1 class="page-header">Scores</h1>
-          <p> Welcome to Scores </p>
-        </div>
-      </div>
-
-
+      {{{body}}}
 
       <footer class="footer">
         <p>&copy; Chinese Checkers 2017</p>

@@ -16,8 +16,10 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.2",
+    "connect-flash": "^0.1.1",
     "console.table": "^0.9.1",
     "express": "^4.16.2",
+    "express-handlebars": "^3.0.0",
     "express-validator": "^4.3.0",
     "morgan": "^1.9.0",
     "mysql": "^2.15.0",
