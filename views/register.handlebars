@@ -1,41 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head lang="en">
-  <title></title>
-  <link rel="stylesheet" type="text/css" href="css/style.css"></link>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-<body>
-  <div class="container">
-    <form action="/register" method="post">
-      <div class="form-input">
-        <label>First Name</label>
-        <br>
-        <input type="text" name="firstname" placeholder="Enter First Name">
-      </div>
-      <div class="form-input">
-        <label>Last Name</label>
-        <br>
-        <input type="text" name="lastname" placeholder="Enter Last Name">
-      </div>
-      <div class="form-input">
-        <label>Username</label>
-        <br>
-        <input type="text" name="username" placeholder="Enter Username">
-      </div>
-      <div class="form-input">
-        <label>Password</label>
-        <br>
-        <input type="password" name="password" placeholder="Enter Password">
-      </div>
-      <div class="form-input">
-        <label>Confirm Password</label>
-        <br>
-        <input type="password" name="password2" placeholder="Enter Password Again">
-      </div>
-      <input type="submit" name="submit" value="Submit" class="btn-login">
-      <br>
-    </form>
+{{#if errors}}
+    {{#each errors}}
+        <div class="alert alert-danger">{{msg}}</div>
+    {{/each}}
+{{/if}}
+<form action="/register" method="post">
+  <div class="form-group">
+    <label>First Name</label>
+    <input type="text" class="form-control" name="firstname" placeholder="Enter First Name">
   </div>
-</body>
-</html>
+  <div class="form-group">
+    <label>Last Name</label>
+    <input type="text" class="form-control" name="lastname" placeholder="Enter Last Name">
+  </div>
+  <div class="form-group">
+    <label>Username</label>
+    <input type="text" class="form-control" name="username" placeholder="Enter Username">
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" class="form-control" name="password" placeholder="Enter Password">
+  </div>
+  <div class="form-group">
+    <label>Confirm Password</label>
+    <input type="password" class="form-control" name="password2" placeholder="Enter Password Again">
+  </div>
+  <input type="submit" name="submit" value="Submit" class="btn btn-default">
+</form>

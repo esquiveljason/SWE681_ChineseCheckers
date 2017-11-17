@@ -2,9 +2,11 @@ var express = require('express');
 var fs = require('fs');
 var https = require('https');
 var path = require('path');
+var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var exphbs = require('express-handlebars');
 var flash = require('connect-flash');
+var session = require('express-session');
 var routes = require('./routes/index');
 
 const logger = require('./logger');
@@ -37,10 +39,17 @@ app.use(morgan('dev', {
 // Body Parser Middleware
 app.use(bodyParser.urlencoded({extended : true}));
 //app.use(express.urlencoded());
+app.use(cookieParser());
 
 // Set Static Folder
 app.use(express.static(path.join(__dirname,'public')));
-app.use('/', routes);
+
+// Express Session
+app.use(session({
+    secret: 'secret',
+    saveUninitialized: true,
+    resave: true
+}));
 
 // Connect Flash
 app.use(flash());
@@ -49,8 +58,11 @@ app.use(function(request, response, next) {
   response.locals.success_msg = request.flash('success_msg');
   response.locals.error_msg = request.flash('error_msg');
   response.locals.error = request.flash('error');
+  response.locals.user = request.user || null;
   next();
 });
+
+app.use('/', routes);
 
 const options = {
   key: fs.readFileSync('ssl/priv.key'),

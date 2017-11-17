@@ -18,7 +18,7 @@ router.get('/', (request, response) => {
 
 router.get('/register', (request, response) => {
   //response.sendFile(path.join(__dirname,'/../public/register.html'));
-  response.render('register', {layout: false});
+  response.render('register');
 });
 
 router.get('/home', (request, response) => {
@@ -38,6 +38,11 @@ router.get('/logout', (request, response) => {
 router.get('/game', (request, response) => {
     //response.sendFile(path.join(__dirname, '/../public/game.html'));
     response.render('game');
+});
+
+router.post('/register_page', (request, response) => {
+    //response.sendFile(path.join(__dirname, '/../public/game.html'));
+    response.redirect('/register');
 });
 
 router.post('/login', [
@@ -81,10 +86,6 @@ router.post('/login', [
     }
 });
 
-router.post('/register_page', (request, response) => {
-  response.redirect('/register');
-});
-
 router.post('/register', [
   check('firstname')
     .isLength({min: 1}).withMessage("FirstName must be entered"),
@@ -104,10 +105,11 @@ router.post('/register', [
   var username  = request.body.username;
   var password  = request.body.password;
 
-  const errors = validationResult(request);
-  if(!errors.isEmpty()) {
-    console.log(errors.mapped());
-    response.redirect('/register');
+  const errs = validationResult(request);
+  if(!errs.isEmpty()) {
+    console.log(errs.mapped());
+    response.render('register', {
+      errors: errs.mapped()});
   } else {
     mysqlpool.getUserByUsername(username, function(user, foundUser) {
       if(!foundUser){
@@ -115,7 +117,12 @@ router.post('/register', [
         response.redirect('/');
       } else {
         logger.info("Registration - Username already exists");
-        response.redirect('/register');
+        var err = { err: {msg: 'Username already exists'}};
+        console.log(err);
+        //request.flash('error', 'Username already exists');
+        //response.redirect('/register');
+        response.render('register', {
+          errors: err});
       }
     });
   }
