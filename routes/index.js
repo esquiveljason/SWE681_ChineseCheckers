@@ -13,7 +13,7 @@ const logger = require('../logger');
 // Get Homepage
 router.get('/', (request, response) => {
   //response.sendFile(path.join(__dirname, '/../public/login.html'));
-  response.render('login', {layout: false});
+  response.render('login');
 });
 
 router.get('/register', (request, response) => {
@@ -32,6 +32,7 @@ router.get('/scores', (request, response) => {
 });
 
 router.get('/logout', (request, response) => {
+  request.flash('success_msg', 'You are logged out.');
   response.redirect("/");
 });
 
@@ -55,12 +56,12 @@ router.post('/login', [
     var username = request.body.username;
     var candidatePassword = request.body.password;
 
-    const errors = validationResult(request);
-    if(!errors.isEmpty()) {
-      console.log(errors.mapped());
-      response.redirect('/');
+    const errs = validationResult(request);
+    if(!errs.isEmpty()) {
+      console.log(errs.mapped());
+      response.render('login', {
+        errors: errs.mapped()});
     } else {
-
       mysqlpool.getUserByUsername(username, function(user, foundUser) {
         if(foundUser){
           logger.info(user.firstname);
@@ -74,13 +75,17 @@ router.post('/login', [
                 logger.info("Succesful login");
                 response.redirect('/home');
               } else {
-                logger.info("Unsuccesful Login - Password does not match");
-                response.redirect('/');
+                logger.info("Unsuccesful Login - Username or Password does not exist");
+                var err = errMsg('Username or Password does not exist');
+                console.log(err);
+                response.render('login', {errors: err});
               }
           });
         } else {
-          logger.info("Unsuccesful Login - Cannot find user");
-          response.redirect('/');
+          logger.info("Unsuccesful Login - Username or Password does not exist");
+          var err = errMsg('Username or Password does not exist');
+          console.log(err);
+          response.render('login', {errors: err});
         }
       });
     }
@@ -94,7 +99,7 @@ router.post('/register', [
   check('username')
     .isLength({min: 1}).withMessage("UserName must be entered"),
   check('password')
-    .isLength({ min: 10, max: 72}).withMessage("Passwords must be between 10 and 72 characters"),
+    .isLength({ min: 10, max: 72}).withMessage("Invalid Password, must be 10 characters"),
   check('password2')
     .custom((value, { req }) => value === req.body.password).withMessage("Must match Password")
 
@@ -114,15 +119,13 @@ router.post('/register', [
     mysqlpool.getUserByUsername(username, function(user, foundUser) {
       if(!foundUser){
         mysqlpool.addUser(firstname, lastname, username, password);
+        request.flash('success_msg', 'You are registered and can now login');
         response.redirect('/');
       } else {
         logger.info("Registration - Username already exists");
-        var err = { err: {msg: 'Username already exists'}};
+        var err = errMsg('Username already exists');
         console.log(err);
-        //request.flash('error', 'Username already exists');
-        //response.redirect('/register');
-        response.render('register', {
-          errors: err});
+        response.render('register', {errors: err});
       }
     });
   }
@@ -132,5 +135,9 @@ router.post('/register', [
 router.get('*', (request, response) => {
   response.status(404).send('Page not found!!!!!!!!!!!!!!!!11')
 });
+
+function errMsg(message) {
+  return { err: {msg: message}};
+}
 
 module.exports = router;

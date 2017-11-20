@@ -95,7 +95,7 @@ module.exports.getUserByUsername = function(username, callback) {
       // Single match was found, should never be more than 1
       if(results.length === 1) {
         user = results[0];
-        logger.info(results.length);
+        logger.info(`MySQL number of matches with ${username} : ` + results.length);
         callback(user, true);
       }
       // No matches where found
