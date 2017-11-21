@@ -14,15 +14,17 @@
       <header class="header clearfix">
         <nav>
           <ul class="nav nav-pills float-right">
-            <li class="nav-item">
-              <a class="nav-link active" href="/home">Home <span class="sr-only">(current)</span></a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/scores">Scores</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/logout">Logout</a>
-            </li>
+            {{#if user}}
+              <li class="nav-item">
+                <a class="nav-link active" href="/home">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/scores">Scores</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link" href="/logout">Logout</a>
+              </li>
+            {{/if}}
           </ul>
         </nav>
         <h3 class="text-muted">Chinese Checkers</h3>
@@ -31,11 +33,13 @@
       {{#if success_msg}}
         <div class="alert alert-success">{{success_msg}}</div>
       {{/if}}
-      {{#if errors}}
-          {{#each errors}}
-              <div class="alert alert-danger">{{msg}}</div>
-          {{/each}}
+      {{#if error_msg}}
+        <div class="alert alert-danger">{{error_msg}}</div>
       {{/if}}
+      {{#if error}}
+        <div class="alert alert-danger">{{error}}</div>
+      {{/if}}
+
       {{{body}}}
 
       <footer class="footer">

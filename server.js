@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 var exphbs = require('express-handlebars');
 var flash = require('connect-flash');
 var session = require('express-session');
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
 var routes = require('./routes/index');
 
 const logger = require('./logger');
@@ -22,8 +24,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.engine('handlebars', exphbs({defaultLayout:'main'}));
 app.set('view engine', 'handlebars');
 
-
-
+// Logger
 app.use(morgan('dev', {
     skip: function (req, res) {
         return res.statusCode < 400
@@ -37,8 +38,8 @@ app.use(morgan('dev', {
 }));
 
 // Body Parser Middleware
-app.use(bodyParser.urlencoded({extended : true}));
-//app.use(express.urlencoded());
+app.use(bodyParser.urlencoded({extended : false}));
+app.use(bodyParser.json());
 app.use(cookieParser());
 
 // Set Static Folder
@@ -53,6 +54,12 @@ app.use(session({
 
 // Connect Flash
 app.use(flash());
+
+// Passport Init
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 
 app.use(function(request, response, next) {
   response.locals.success_msg = request.flash('success_msg');
