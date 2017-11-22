@@ -78,11 +78,11 @@ passport.use( new LocalStrategy(
   }
 ));
 passport.serializeUser(function(user, done) {
-  done(null, user.id);
+  done(null, user.username);
 });
 
-passport.deserializeUser(function(id, done) {
-  mysqlpool.getUserByID(id, function(user, foundUser) {
+passport.deserializeUser(function(username, done) {
+  mysqlpool.getUserByUsername(username, function(user, foundUser) {
     if(foundUser){
       done(null, user); //todo should be done(error,user)
     }
@@ -98,52 +98,6 @@ router.post('/login',
                                    failureFlash: true })
 );
 
-/*
-router.post('/login', [
-    check('username')
-      .isLength({min:1}).withMessage('Username must be entered'),
-    check('password')
-      .isLength({min:1}).withMessage('Password must be entered')
-], (request, response) => {
-
-    var username = request.body.username;
-    var candidatePassword = request.body.password;
-
-    const errs = validationResult(request);
-    if(!errs.isEmpty()) {
-      console.log(errs.mapped());
-      response.render('login', {
-        errors: errs.mapped()});
-    } else {
-      mysqlpool.getUserByUsername(username, function(user, foundUser) {
-        if(foundUser){
-          logger.info(user.firstname);
-          logger.info(user.lastname);
-          logger.info(user.username);
-          logger.info(user.password);
-
-          // compare password with database password
-          bcrypt.compare(candidatePassword, user.password, function(err, isMatch) {
-              if(isMatch) {
-                logger.info("Succesful login");
-                response.redirect('/home');
-              } else {
-                logger.info("Unsuccesful Login - Username or Password does not exist");
-                var err = errMsg('Username or Password does not exist');
-                console.log(err);
-                response.render('login', {errors: err});
-              }
-          });
-        } else {
-          logger.info("Unsuccesful Login - Username or Password does not exist");
-          var err = errMsg('Username or Password does not exist');
-          console.log(err);
-          response.render('login', {errors: err});
-        }
-      });
-    }
-});
-*/
 router.post('/register', [
   check('firstname')
     .isLength({min: 1}).withMessage("FirstName must be entered"),

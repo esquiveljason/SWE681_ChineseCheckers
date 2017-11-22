@@ -109,37 +109,3 @@ module.exports.getUserByUsername = function(username, callback) {
     connection.release();
   });
 }
-/*
- * id - id used to search for user in database
- * callback
- *  user - User object holding user data
- *  foundUser - boolean, true if found user in db
- */
-module.exports.getUserByID = function(id, callback) {
-  var sql_stmt = "SELECT * FROM users WHERE id = ?";
-  var values = [id];
-  var user;
-
-  sql_stmt = mysql.format(sql_stmt, values);
-
-  mysqlpool.getConnection(function(err, connection) {
-    if(err) throw err;
-    connection.query('USE chinesecheckersdb', function (err, results, fields) {
-        if (err) throw err;
-    });
-    connection.query(sql_stmt, function (err, results, fields) {
-      if(err) throw err;
-      // Single match was found, should never be more than 1
-      if(results.length === 1) {
-        user = results[0];
-        logger.info(`MySQL number of matches with id ${id} : ` + results.length);
-        callback(user, true);
-      }
-      // No matches where found
-      else {
-        callback(null, false);
-      }
-    });
-    connection.release();
-  });
-}
