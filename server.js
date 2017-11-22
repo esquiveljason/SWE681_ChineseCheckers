@@ -76,7 +76,10 @@ const options = {
   cert: fs.readFileSync('ssl/cert.crt')
 };
 
-https.createServer(options, app).listen(port, (err) => {
+// Start the Server
+var server = https.createServer(options, app);
+
+server.listen(port, (err) => {
   if (err) {
     return console.log('something bad happened', err)
   }
@@ -84,3 +87,23 @@ https.createServer(options, app).listen(port, (err) => {
   logger.info('Server is starting......');
   logger.info(`Server is listening on ${port}`);
 });
+
+// WebSocket Portion
+// Wortk with HTTPS server
+var io = require('socket.io')(server);
+
+io.sockets.on('connection',
+  // We are given a wesocket object in our function
+  function(socket) {
+      logger.info("We have a new client: " + socket.id);
+
+      socket.on('update', function(data) {
+        socket.broadcast.emit('update', data);
+      });
+
+      // When socket is disconnected
+      socket.on('disconnect', function() {
+        console.log("We have disconnected client: " + socket.id);
+      });
+  }
+);

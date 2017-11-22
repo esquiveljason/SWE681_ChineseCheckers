@@ -90,6 +90,9 @@ module.exports.getUserByUsername = function(username, callback) {
 
   mysqlpool.getConnection(function(err, connection) {
     if(err) throw err;
+    connection.query('USE chinesecheckersdb', function (err, results, fields) {
+        if (err) throw err;
+    });
     connection.query(sql_stmt, function (err, results, fields) {
       if(err) throw err;
       // Single match was found, should never be more than 1
