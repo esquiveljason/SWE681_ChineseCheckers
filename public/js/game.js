@@ -21,7 +21,7 @@ function setUpSocket() {
   // Start socket connection to the server
   socket = io.connect('https://localhost:8000');
   // Update event called 'update'
-  socket.on('update', updateCanvas);
+  socket.on('update', updateCanvasReceived);
 
   socket.on('room', setRoom)
 
@@ -30,23 +30,29 @@ function setUpSocket() {
 
 }
 function enable() {
-  gameEnabled = true;
   button.remove();
 
   setUpSocket();
 }
 function updateCanvas(data) {
-  if(gameEnabled)
-  {
-    // Draw from update
-    noStroke();
-    fill(255,0,102);
-    ellipse(data.x, data.y, 20, 20);
-  }
+  // Draw from update
+  noStroke();
+  fill(255,0,102);
+  ellipse(data.x, data.y, 20, 20);
 }
+
+function updateCanvasReceived(data) {
+  // Draw from update
+  console.log("Receiving update Data")
+  noStroke();
+  fill(255,0,102);
+  ellipse(data.x, data.y, 20, 20);
+}
+
 function setRoom(data) {
+  gameEnabled = data.startGame;
   room = data.room;
-  console.log("Room : " + data.room);
+  console.log("Received Room Update Message : " + room + " StartGame Flag : " + gameEnabled);
 }
 
 function draw() {
@@ -61,17 +67,20 @@ function mouseDragged() {
     y: mouseY
   };
 
-  // update Canvas
-  updateCanvas(updateData)
+  if(gameEnabled){
+    // update Canvas
+    updateCanvas(updateData)
 
-  // Send update message
-  sendUpdate(updateData);
+    // Send update message
+    sendUpdate(updateData);
+  }
 }
 
 // Function for sending to the socket
 function sendUpdate(updateData) {
   // Send that object to the socket
   socket.emit('update', updateData);
+  console.log("Sending update to : " + updateData.room);
 }
 
 function centerCanvas(){

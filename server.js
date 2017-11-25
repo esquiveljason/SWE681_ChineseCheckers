@@ -92,7 +92,7 @@ server.listen(port, (err) => {
 // Wortk with HTTPS server
 var io = require('socket.io')(server);
 
-var temp = 0;
+var roomNumber = 0; // todo use somekind of hash
 var room;
 var roomData;
 
@@ -103,36 +103,34 @@ io.sockets.on('connection',
 
       socket.on('update', function(data) {
         var sendToRoom = data.room;
-        io.sockets.in(sendToRoom).emit('update', data);
-        //socket.broadcast.emit('update', data);
+        //io.sockets.in(sendToRoom).emit('update', data);
+        socket.to(sendToRoom).emit('update', data);
+        logger.info("Sending update to Room: " + sendToRoom);
       });
-
+      // Handle when user wants to start new game, need 2 users to start game
+      // Should start game when second user is accepted
       socket.on('newgame', function() {
         logger.info("Received New Game Message from client: " + socket.id);
+        // if no room is available make room and join, send back to user
         if(room == null) {
-          logger.info("Room is NULL ")
-          room = 'room'+temp;
+          room = 'room'+roomNumber;
           logger.info("Making new Room: " + room);
           socket.join(room, (err) => {
             if (err) throw err;
           });
-          roomData = {
-            room: room
-          }
           logger.info("Sending Room to client: " + socket.id);
-          io.sockets.in(room).emit('room', roomData);
+          io.sockets.in(room).emit('room', {room: room, startGame: false});
         }
+        // if there is a room available to join, send back to user, clear room for next user
+        // Start game
         else{
-          logger.info("Room already Exist");
+          logger.info("Room is waiting: " + room);
           socket.join(room, (err) => {
             if (err) throw err;
           });
-          roomData = {
-            room: room
-          }
           logger.info("Sending Room to client: " + socket.id);
-          io.sockets.in(room).emit('room', roomData);
-          temp++;
+          io.sockets.in(room).emit('room', {room: room, startGame: true});
+          roomNumber++;
           room = null;
         }
       });
