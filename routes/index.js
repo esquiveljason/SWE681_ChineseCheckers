@@ -42,7 +42,15 @@ router.get('/logout', ensureAuthenticated, (request, response) => {
 
 router.get('/game', ensureAuthenticated, (request, response) => {
     //response.sendFile(path.join(__dirname, '/../public/game.html'));
-    response.render('game');
+  response.render('game');
+});
+
+router.post('/newgame', ensureAuthenticated, (request, response) => {
+  response.redirect('/game');
+});
+
+router.post('/joingame', ensureAuthenticated, (request, response) => {
+  response.redirect('/game');
 });
 
 router.post('/register_page', (request, response) => {

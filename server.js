@@ -92,18 +92,54 @@ server.listen(port, (err) => {
 // Wortk with HTTPS server
 var io = require('socket.io')(server);
 
+var temp = 0;
+var room;
+var roomData;
+
 io.sockets.on('connection',
   // We are given a wesocket object in our function
   function(socket) {
       logger.info("We have a new client: " + socket.id);
 
       socket.on('update', function(data) {
-        socket.broadcast.emit('update', data);
+        var sendToRoom = data.room;
+        io.sockets.in(sendToRoom).emit('update', data);
+        //socket.broadcast.emit('update', data);
+      });
+
+      socket.on('newgame', function() {
+        logger.info("Received New Game Message from client: " + socket.id);
+        if(room == null) {
+          logger.info("Room is NULL ")
+          room = 'room'+temp;
+          logger.info("Making new Room: " + room);
+          socket.join(room, (err) => {
+            if (err) throw err;
+          });
+          roomData = {
+            room: room
+          }
+          logger.info("Sending Room to client: " + socket.id);
+          io.sockets.in(room).emit('room', roomData);
+        }
+        else{
+          logger.info("Room already Exist");
+          socket.join(room, (err) => {
+            if (err) throw err;
+          });
+          roomData = {
+            room: room
+          }
+          logger.info("Sending Room to client: " + socket.id);
+          io.sockets.in(room).emit('room', roomData);
+          temp++;
+          room = null;
+        }
       });
 
       // When socket is disconnected
       socket.on('disconnect', function() {
-        console.log("We have disconnected client: " + socket.id);
+        logger.info("We have disconnected client: " + socket.id);
       });
   }
 );

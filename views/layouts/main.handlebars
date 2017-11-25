@@ -5,9 +5,9 @@
     <title>App</title>
     <link rel="stylesheet" href="/css/bootstrap.css">
     <link rel="stylesheet" href="/css/narrow-jumbotron.css">
-    <script src="/js/p5.min.js"></script>
-    <script src="/js/addons/p5.dom.min.js"></script>
-    <script src="/js/addons/p5.sound.min.js"></script>
+    <script src="/js/p5.js"></script>
+    <script src="/js/p5.dom.js"></script>
+    <script src="/js/p5.sound.js"></script>
   </head>
   <body>
     <div class="container">
@@ -15,15 +15,9 @@
         <nav>
           <ul class="nav nav-pills float-right">
             {{#if user}}
-              <li class="nav-item">
-                <a class="nav-link active" href="/home">Home</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/scores">Scores</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="/logout">Logout</a>
-              </li>
+              <li class="nav-item"><a class="nav-link active" href="/home">Home</a></li>
+              <li class="nav-item"><a class="nav-link" href="/scores">Scores</a></li>
+              <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
             {{/if}}
           </ul>
         </nav>
@@ -41,10 +35,6 @@
       {{/if}}
 
       {{{body}}}
-
-      <footer class="footer">
-        <p>&copy; Chinese Checkers 2017</p>
-      </footer>
 
     </div> <!-- /container -->
   </body>
