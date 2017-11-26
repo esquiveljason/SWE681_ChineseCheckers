@@ -9,6 +9,18 @@ var rows = 17;
 var cols = 25;
 var board;
 
+var SelectStatusEnum = {
+   START: 101,
+   END: 102,
+ };
+var selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
+var alreadyMoved = false;
+
+var iStart = -1;
+var jStart = -1;
+var iEnd = -1;
+var jEnd = -1;
+
 var boardHoles = [[false,false,false,false,false,false,false,false,false,false,false,false, true,false,false,false,false,false,false,false,false,false,false,false,false],
                   [false,false,false,false,false,false,false,false,false,false,false, true,false, true,false,false,false,false,false,false,false,false,false,false,false],
                   [false,false,false,false,false,false,false,false,false,false, true,false, true,false, true,false,false,false,false,false,false,false,false,false,false],
@@ -48,7 +60,13 @@ function setup() {
   for (var j = 0; j < 17; j++) {
     for (var i = 0; i < 25; i++) {
       if(boardHoles[j][i])
-        board[j][i] = new Hole(i,j);
+        if(j > 12) { // Player 1
+          board[j][i] = new Hole(i, j, HoleStatusENum.PLAYER1)
+        } else if(j < 4) { // Player 2
+          board[j][i] = new Hole(i, j, HoleStatusENum.PLAYER2)
+        } else { // all other holes
+          board[j][i] = new Hole(i, j, HoleStatusENum.EMPTY)
+        }
     }
   }
 
@@ -131,12 +149,84 @@ function draw() {
 }
 
 function mousePressed() {
+  var found = false;
+  var iFound = -1;
+  var jFound = -1;
+  loop:
   for (var j = 0; j < 17; j++) {
     for (var i = 0; i < 25; i++) {
       if(boardHoles[j][i])
-        board[j][i].clicked()
+        if(board[j][i].clicked()){
+          found = true;
+          iFound = i;
+          jFound = j;
+          break loop;
+        }
     }
   }
+
+  if(found)
+  {
+    if(board[jFound][iFound].status.id === HoleStatusENum.PLAYER1.id && !alreadyMoved)
+    {
+      if(iStart > 0 && jStart > 0){ // we've already selected a player1 ball previously
+        board[jStart][iStart].setSelected(false); // un selected previous ball
+        console.log("Unselected Start (i,j) : (" + iStart+","+ jStart+")" );
+      }
+      iStart = iFound;
+      jStart = jFound;
+      board[jStart][iStart].setSelected(true);
+      selectStatus = SelectStatusEnum.END;
+
+      console.log("  Selected Start (i,j) : (" + iStart+","+ jStart+")" );
+    }
+    else if(selectStatus === SelectStatusEnum.END)
+    {
+      iEnd = iFound;
+      jEnd = jFound;
+      console.log("Selected Dest (i,j) : (" + iEnd+","+ jEnd+")" );
+      if(validMove()) {
+        board[jStart][iStart].status = HoleStatusENum.EMPTY;
+        board[jEnd][iEnd].status = HoleStatusENum.PLAYER1;
+        board[jStart][iStart].setSelected(false);
+        board[jEnd][iEnd].setSelected(true);
+        jStart = jEnd;
+        iStart = iEnd;
+        alreadyMoved = true;
+      }
+    }
+  }
+}
+
+function validMove() {
+  if(board[jEnd][iEnd].status.id === HoleStatusENum.EMPTY.id) {
+    if(iStart-1 === iEnd) {
+      if(jStart-1 === jEnd){
+        return true;           // TOP
+      }
+      if(jStart+1 === jEnd){
+        return true;
+      }
+    }
+    else if(iStart+1 === iEnd) {
+      if(jStart-1 === jEnd){
+        return true;
+      }
+      if(jStart+1 === jEnd){
+        return true;
+      }
+    }
+    else if(jStart === jEnd) {
+      if(iStart-2 === iEnd){
+        return true;
+      }
+      if(iStart+2 === iEnd){
+        return true;
+      }
+    }
+  }
+  console.log("Move is not valid");
+  return false;
 }
 
 function mouseDragged() {
@@ -183,5 +273,5 @@ function drawCenterButton() {
 
 function windowResized() {
   centerCanvas();
-  drawCenterButton();
+  //drawCenterButton();
 }

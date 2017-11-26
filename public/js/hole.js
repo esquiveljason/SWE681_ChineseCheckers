@@ -5,28 +5,64 @@
 
  var WIDTH = 25;
 
+var HoleStatusENum = {
+   EMPTY: {id: 100, color: "white"},
+   PLAYER1: {id: 101, color: "blue"},
+   PLAYER2: {id: 102, color: "red"}
+ };
+
 /*
  * Indexes
  * Position i in board 2d Array - i,x = column
  * Position j in board 2d array - j,y = row
  */
-function Hole(i,j) {
+function Hole(i,j,status) {
   this.i = i;
   this.j = j;
-  this.x = i*SIZE_X + 15;
-  this.y = j*SIZE_Y + 15;
-
+  this.x = i*SIZE_X + CENTER_OFFSET;
+  this.y = j*SIZE_Y + CENTER_OFFSET;
+  this.status = status;
+  this.selected = false;
 }
 
 Hole.prototype.show = function() {
-      fill(255);
-      ellipseMode(CENTER);
-      ellipse(this.x, this.y, WIDTH);
+  fill(this.status.color);
+  ellipseMode(CENTER);
+  ellipse(this.x, this.y, WIDTH);
+
+  if(this.selected && this.status.id != HoleStatusENum.EMPTY.id) { // do not select empty hole
+    star(this.x,this.y, 4, 10, 5);
+  }
 }
 
 Hole.prototype.clicked = function() {
+
   var d = dist(mouseX,mouseY,this.x,this.y)
-  if(d < WIDTH/2) {
+  if(d < WIDTH/2.0) {
     console.log("Clicked Hole (i,j)  : (" + this.i+","+this.j+")" );
+    return true;
   }
+  return false;
+}
+
+Hole.prototype.setSelected = function(selected) {
+  this.selected = selected;
+}
+
+function star(x, y, radius1, radius2, npoints) {
+  push();
+  var angle = TWO_PI / npoints;
+  var halfAngle = angle/2.0;
+  beginShape();
+  fill('white');
+  for (var a = 0; a < TWO_PI; a += angle) {
+    var sx = x + cos(a) * radius2;
+    var sy = y + sin(a) * radius2;
+    vertex(sx, sy);
+    sx = x + cos(a+halfAngle) * radius1;
+    sy = y + sin(a+halfAngle) * radius1;
+    vertex(sx, sy);
+  }
+  endShape(CLOSE);
+  pop();
 }
