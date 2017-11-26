@@ -15,7 +15,7 @@ const logger = require('../logger');
 // Get Homepage
 router.get('/', function(request, response){
   //response.sendFile(path.join(__dirname, '/../public/login.html'));
-  response.render('login');
+  response.render('home');//login');
 });
 
 
