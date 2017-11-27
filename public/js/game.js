@@ -1,6 +1,6 @@
 // Socket connection
 var socket;
-var gameEnabled = false;
+var playerTurn = false;
 var cnv;            // p5 Canvas
 var joinGameButton; // Join Game button
 var doneTurnButton; // Button to end turn
@@ -50,8 +50,6 @@ function make2DArray(rows, cols) {
  }
  return arr;
 }
-
-
 
 function setup() {
   // put setup code here
@@ -132,12 +130,12 @@ function updateMsgHandler(updateBoardData) {
 function roomMsgHandler(data) {
   // from room msg, true when 2 players connected, first player connected will get true
   // Second player connected will get false, will be second
-  gameEnabled = data.startGame;
+  playerTurn = data.playerTurn;
   // Set room for this user
   room = data.room;
-  console.log("Received Room Update Message : " + room + " StartGame Flag : " + gameEnabled);
+  console.log("Received Room Update Message : " + room + " PlayerTurn Flag : " + playerTurn);
   drawDoneTurnButton();
-  if(!gameEnabled)
+  if(!playerTurn)
     doneTurnButton.hide()
 }
 
@@ -146,7 +144,7 @@ function roomMsgHandler(data) {
  */
 function doneTurnMsgHandler() {
   doneTurnButton.show();
-  gameEnabled = true;
+  playerTurn = true;
   selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
   alreadyMoved = false; // Already started moving, prevent moving of another ball
 
@@ -179,7 +177,7 @@ function draw() {
  */
 function mousePressed() {
   // 1) Finds hole that was pressed
-  if(gameEnabled) { // don't allow click if gamenotenabled
+  if(playerTurn) { // don't allow click if gamenotenabled
     var found = false;
     var iFound = -1;
     var jFound = -1;
@@ -370,7 +368,7 @@ function drawDoneTurnButton() {
 
 // Listener when done button is pressed
 function doneTurnButtonListener() {
-  gameEnabled = false; // make it not clickable
+  playerTurn = false; // make it not clickable
   socket.emit("doneTurnMsg", {room : room}); // send msg to room indicating user is done with turn
   doneTurnButton.hide(); // hide done turn button
   board[jStart][iStart].setSelected(false); // unselect hole
@@ -382,4 +380,6 @@ function windowResized() {
   centerCanvas();
   drawJoinGameButton();
   drawDoneTurnButton();
+  if(!playerTurn)
+    doneTurnButton.hide()
 }

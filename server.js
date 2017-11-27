@@ -125,7 +125,7 @@ io.sockets.on('connection',
           });
           logger.info("Sending Room to client: " + socket.id);
           //io.sockets.in(room).emit('room', {room: room, startGame: false});
-          socket.emit('roomMsg', {room: room, startGame: true});
+          socket.emit('roomMsg', {room: room, playerTurn: true});
         }
         // if there is a room available to join, send back to user, clear room for next user
         // Start game
@@ -136,7 +136,7 @@ io.sockets.on('connection',
           });
           logger.info("Sending Room to client: " + socket.id);
           //io.sockets.in(room).emit('room', {room: room, startGame: true});
-          socket.emit('roomMsg', {room: room, startGame: false});
+          socket.emit('roomMsg', {room: room, playerTurn: false});
           roomNumber++;
           room = null;
         }
