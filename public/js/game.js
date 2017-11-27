@@ -1,6 +1,6 @@
 // Socket connection
 var socket;
-var playerTurn = false;
+var playerTurn;
 var cnv;            // p5 Canvas
 var joinGameButton; // Join Game button
 var doneTurnButton; // Button to end turn
@@ -19,10 +19,10 @@ var SelectStatusEnum = {   // flags to ndicates wether start ball has been selec
 var selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
 var alreadyMoved = false; // Already started moving, prevent moving of another ball
 
-var iStart = -1;  // Postions of selected ball
-var jStart = -1;
-var iEnd = -1;    // Positions of selected slot for ball to move to
-var jEnd = -1;
+var iStart;  // Postions of selected ball
+var jStart;
+var iEnd;    // Positions of selected slot for ball to move to
+var jEnd;
 
 // true if ball is allowed on slot
 var boardHoles = [[false,false,false,false,false,false,false,false,false,false,false,false, true,false,false,false,false,false,false,false,false,false,false,false,false],
@@ -54,7 +54,16 @@ function make2DArray(rows, cols) {
 }
 
 function setup() {
-  // put setup code here
+  // Initialize variables
+  playerTurn = false;
+  selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
+  alreadyMoved = false; // Already started moving, prevent moving of another ball
+  iStart = -1;  // Postions of selected ball
+  jStart = -1;
+  iEnd = -1;    // Positions of selected slot for ball to move to
+  jEnd = -1;
+
+  // Initialize Canvas
   cnv = createCanvas(800, 510);
   background(51);
   centerCanvas();
@@ -63,7 +72,7 @@ function setup() {
   // instantiate empty 2d array for board
   board = make2DArray(boardHoles.length, boardHoles[0].length);
 
-  // Draw and color board, white for empty, blue for player1, red for player 2
+  // Set up Holes for all valid ones in board
   for (var j = 0; j < TOTALROWS; j++) {
     for (var i = 0; i < TOTALCOLS; i++) {
       if(boardHoles[j][i])
