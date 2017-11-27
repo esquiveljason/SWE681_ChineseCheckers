@@ -107,6 +107,10 @@ io.sockets.on('connection',
         socket.to(sendToRoom).emit('update', data);
         logger.info("Sending update to Room: " + sendToRoom);
       });
+      socket.on('doneTurn', function(data) {
+        var sendToRoom = data.room;
+        socket.to(sendToRoom).emit('doneTurn')
+      })
       // Handle when user wants to start new game, need 2 users to start game
       // Should start game when second user is accepted
       socket.on('newgame', function() {
@@ -119,7 +123,8 @@ io.sockets.on('connection',
             if (err) throw err;
           });
           logger.info("Sending Room to client: " + socket.id);
-          io.sockets.in(room).emit('room', {room: room, startGame: false});
+          //io.sockets.in(room).emit('room', {room: room, startGame: false});
+          socket.emit('room', {room: room, startGame: true});
         }
         // if there is a room available to join, send back to user, clear room for next user
         // Start game
@@ -129,7 +134,8 @@ io.sockets.on('connection',
             if (err) throw err;
           });
           logger.info("Sending Room to client: " + socket.id);
-          io.sockets.in(room).emit('room', {room: room, startGame: true});
+          //io.sockets.in(room).emit('room', {room: room, startGame: true});
+          socket.emit('room', {room: room, startGame: false});
           roomNumber++;
           room = null;
         }

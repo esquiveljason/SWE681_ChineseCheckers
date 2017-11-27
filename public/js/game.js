@@ -94,8 +94,9 @@ function setUpSocket() {
   // Update event called 'update' to updateCanva
   socket.on('update', updateBoardReceived);
   // Listerner to set room for socket and startGame
-  socket.on('room', setRoom)
-
+  socket.on('room', setRoom);
+  //
+  socket.on('doneTurn', otherPlayerDone);
   // Send out message to try to start new game, this user is ready to play
   socket.emit('newgame');
   console.log("Emitting new game");
@@ -115,8 +116,22 @@ function setRoom(data) {
   gameEnabled = data.startGame;
   room = data.room;
   console.log("Received Room Update Message : " + room + " StartGame Flag : " + gameEnabled);
-  if(gameEnabled)
-    drawDoneTurnButton();
+  drawDoneTurnButton();
+  if(!gameEnabled)
+    doneTurnButton.hide()
+}
+
+//
+function otherPlayerDone() {
+  doneTurnButton.show();
+  gameEnabled = true;
+  selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
+  alreadyMoved = false; // Already started moving, prevent moving of another ball
+
+  iStart = -1;  // Postions of selected ball
+  jStart = -1;
+  iEnd = -1;    // Positions of selected slot for ball to move to
+  jEnd = -1;
 }
 
 // Draw board
@@ -131,19 +146,21 @@ function draw() {
 }
 
 function mousePressed() {
-  var found = false;
-  var iFound = -1;
-  var jFound = -1;
-  loop:
-  for (var j = 0; j < 17; j++) {
-    for (var i = 0; i < 25; i++) {
-      if(boardHoles[j][i])
-        if(board[j][i].clicked()){
-          found = true;
-          iFound = i;
-          jFound = j;
-          break loop;
-        }
+  if(gameEnabled) { // don't allow click if gamenotenabled
+    var found = false;
+    var iFound = -1;
+    var jFound = -1;
+    loop:
+    for (var j = 0; j < 17; j++) {
+      for (var i = 0; i < 25; i++) {
+        if(boardHoles[j][i])
+          if(board[j][i].clicked()){
+            found = true;
+            iFound = i;
+            jFound = j;
+            break loop;
+          }
+      }
     }
   }
 
@@ -185,28 +202,30 @@ function mousePressed() {
 // Checks if move is valid from (jStart, iStart)  to (jEnd, iEnd)
 function validMove() {
   if(board[jEnd][iEnd].status.id === HoleStatusEnum.EMPTY.id) { // if empty spot
-    if(iStart-1 === iEnd) {
-      if(jStart-1 === jEnd){
-        return true;           // TOP
+    if(!alreadyMoved) {
+      if(iStart-1 === iEnd) {
+        if(jStart-1 === jEnd){
+          return true;           // TOP
+        }
+        if(jStart+1 === jEnd){
+          return true;
+        }
       }
-      if(jStart+1 === jEnd){
-        return true;
+      else if(iStart+1 === iEnd) {
+        if(jStart-1 === jEnd){
+          return true;
+        }
+        if(jStart+1 === jEnd){
+          return true;
+        }
       }
-    }
-    else if(iStart+1 === iEnd) {
-      if(jStart-1 === jEnd){
-        return true;
-      }
-      if(jStart+1 === jEnd){
-        return true;
-      }
-    }
-    else if(jStart === jEnd) {
-      if(iStart-2 === iEnd){
-        return true;
-      }
-      if(iStart+2 === iEnd){
-        return true;
+      else if(jStart === jEnd) {
+        if(iStart-2 === iEnd){
+          return true;
+        }
+        if(iStart+2 === iEnd){
+          return true;
+        }
       }
     }
 
@@ -295,6 +314,16 @@ function drawDoneTurnButton() {
   doneTurnButton.style("font-size", "40px");
   doneTurnButton.style("width", "249px");
   doneTurnButton.position(cnv.x + 525 , cnv.y + 100);
+
+  doneTurnButton.mousePressed(doneTurnButtonListener);
+}
+
+// Listener when done button is pressed
+function doneTurnButtonListener() {
+  gameEnabled = false;
+  socket.emit("doneTurn", {room : room});
+  doneTurnButton.hide();
+  board[jStart][iStart].setSelected(false);
 }
 
 function windowResized() {
