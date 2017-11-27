@@ -5,7 +5,7 @@
 
  var WIDTH = 25;
 
-var HoleStatusENum = {
+var HoleStatusEnum = {
    EMPTY: {id: 100, color: "white"},
    PLAYER1: {id: 101, color: "blue"},
    PLAYER2: {id: 102, color: "red"}
@@ -30,7 +30,7 @@ Hole.prototype.show = function() {
   ellipseMode(CENTER);
   ellipse(this.x, this.y, WIDTH);
 
-  if(this.selected && this.status.id != HoleStatusENum.EMPTY.id) { // do not select empty hole
+  if(this.selected && this.status.id != HoleStatusEnum.EMPTY.id) { // do not select empty hole
     star(this.x,this.y, 4, 10, 5);
   }
 }

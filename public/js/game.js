@@ -2,25 +2,27 @@
 var socket;
 var gameEnabled = false;
 var cnv;
-var button;
+var joinGameButton; // Join Game button
+var doneTurnButton; // Button to end turn
 var room;
 
-var rows = 17;
-var cols = 25;
-var board;
+var TOTALROWS = 17; // ROWS for board
+var TOTALCOLS = 25; // COLS for board
+var board;     // 2D array of holes indicating board status
 
-var SelectStatusEnum = {
+var SelectStatusEnum = {   // flags to ndicates wether start ball has been selected
    START: 101,
    END: 102,
  };
 var selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
-var alreadyMoved = false;
+var alreadyMoved = false; // Already started moving, prevent moving of another ball
 
-var iStart = -1;
+var iStart = -1;  // Postions of selected ball
 var jStart = -1;
-var iEnd = -1;
+var iEnd = -1;    // Positions of selected slot for ball to move to
 var jEnd = -1;
 
+// true if ball is allowed on slot
 var boardHoles = [[false,false,false,false,false,false,false,false,false,false,false,false, true,false,false,false,false,false,false,false,false,false,false,false,false],
                   [false,false,false,false,false,false,false,false,false,false,false, true,false, true,false,false,false,false,false,false,false,false,false,false,false],
                   [false,false,false,false,false,false,false,false,false,false, true,false, true,false, true,false,false,false,false,false,false,false,false,false,false],
@@ -39,13 +41,15 @@ var boardHoles = [[false,false,false,false,false,false,false,false,false,false,f
                   [false,false,false,false,false,false,false,false,false,false,false, true,false, true,false,false,false,false,false,false,false,false,false,false,false],
                   [false,false,false,false,false,false,false,false,false,false,false,false, true,false,false,false,false,false,false,false,false,false,false,false,false]];
 
- function make2DArray(rows, cols) {
-   var arr = new Array(rows);
-   for (var i = 0; i < arr.length; i++) {
-     arr[i] = new Array(cols);
-   }
-   return arr;
+
+// Make empty 2d array
+function make2DArray(rows, cols) {
+ var arr = new Array(rows);
+ for (var i = 0; i < arr.length; i++) {
+   arr[i] = new Array(cols);
  }
+ return arr;
+}
 
 
 
@@ -55,89 +59,67 @@ function setup() {
   background(51);
   centerCanvas();
 
+  // instantiate empty 2d array for board
   board = make2DArray(boardHoles.length, boardHoles[0].length);
 
-  for (var j = 0; j < 17; j++) {
-    for (var i = 0; i < 25; i++) {
+  for (var j = 0; j < TOTALROWS; j++) {
+    for (var i = 0; i < TOTALCOLS; i++) {
       if(boardHoles[j][i])
         if(j > 12) { // Player 1
-          board[j][i] = new Hole(i, j, HoleStatusENum.PLAYER1)
+          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1)
         } else if(j < 4) { // Player 2
-          board[j][i] = new Hole(i, j, HoleStatusENum.PLAYER2)
+          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2)
         } else { // all other holes
-          board[j][i] = new Hole(i, j, HoleStatusENum.EMPTY)
+          board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY)
         }
     }
   }
 
+  // Draw Button to join game and start Socket
+  drawJoinGameButton();
+  joinGameButton.mousePressed(joinGameButtonListener);
 
-  /*// Set colors
-  fill(204, 101, 192, 127);
-  stroke(127, 63, 120);
-  for(var y = 0; y < boardHoles.length; y++) {
-    for(var x = 0; x < boardHoles[y].length; x++) {
-      if(boardHoles[y][x]) {
-        var posY = y*30;
-        var posX = x*20;
-        fill(255);
-        ellipseMode(CENTER);
-        ellipse(posX+15, posY+15, 25);
-      }
-      else{
-        var posY = y*30;
-        var posX = x*20;
-        rectMode(CENTER);
-        fill(204, 101, 192, 127);
-        //rect(posX+15, posY+15, 20,30);
-      }
+}
 
-    }
-  }*/
+// Listener when button is pressed.
+function joinGameButtonListener() {
+  joinGameButton.remove();
 
-  //drawCenterButton();
-
-  //button.mousePressed(enable);
-
+  setUpSocket();
 }
 
 function setUpSocket() {
   // Start socket connection to the server
   socket = io.connect('https://localhost:8000');
-  // Update event called 'update'
-  socket.on('update', updateCanvasReceived);
-
+  // Update event called 'update' to updateCanva
+  socket.on('update', updateBoardReceived);
+  // Listerner to set room for socket and startGame
   socket.on('room', setRoom)
 
+  // Send out message to try to start new game, this user is ready to play
   socket.emit('newgame');
   console.log("Emitting new game");
 
 }
-function enable() {
-  button.remove();
 
-  setUpSocket();
-}
-function updateCanvas(data) {
-  // Draw from update
-  noStroke();
-  fill(255,0,102);
-  ellipse(data.x, data.y, 20, 20);
+function updateBoardReceived(data) {
+  console.log("Update Start (i,j) : (" + data.iStart+","+ data.jStart+")" );
+  console.log("Update End   (i,j) : (" + data.iEnd+","+ data.jEnd+")" );
+  board[data.jStart][data.iStart].status = HoleStatusEnum.EMPTY;
+  board[data.jEnd][data.iEnd].status = HoleStatusEnum.PLAYER2;
 }
 
-function updateCanvasReceived(data) {
-  // Draw from update
-  console.log("Receiving update Data")
-  noStroke();
-  fill(255,0,102);
-  ellipse(data.x, data.y, 20, 20);
-}
-
+// Listner to set room when received from server
 function setRoom(data) {
+
   gameEnabled = data.startGame;
   room = data.room;
   console.log("Received Room Update Message : " + room + " StartGame Flag : " + gameEnabled);
+  if(gameEnabled)
+    drawDoneTurnButton();
 }
 
+// Draw board
 function draw() {
   for (var j = 0; j < 17; j++) {
     for (var i = 0; i < 25; i++) {
@@ -167,7 +149,7 @@ function mousePressed() {
 
   if(found)
   {
-    if(board[jFound][iFound].status.id === HoleStatusENum.PLAYER1.id && !alreadyMoved)
+    if(board[jFound][iFound].status.id === HoleStatusEnum.PLAYER1.id && !alreadyMoved)
     {
       if(iStart > 0 && jStart > 0){ // we've already selected a player1 ball previously
         board[jStart][iStart].setSelected(false); // un selected previous ball
@@ -186,20 +168,23 @@ function mousePressed() {
       jEnd = jFound;
       console.log("Selected Dest (i,j) : (" + iEnd+","+ jEnd+")" );
       if(validMove()) {
-        board[jStart][iStart].status = HoleStatusENum.EMPTY;
-        board[jEnd][iEnd].status = HoleStatusENum.PLAYER1;
+        board[jStart][iStart].status = HoleStatusEnum.EMPTY;
+        board[jEnd][iEnd].status = HoleStatusEnum.PLAYER1;
         board[jStart][iStart].setSelected(false);
         board[jEnd][iEnd].setSelected(true);
+        sendUpdate();
         jStart = jEnd;
         iStart = iEnd;
         alreadyMoved = true;
+
       }
     }
   }
 }
 
+// Checks if move is valid from (jStart, iStart)  to (jEnd, iEnd)
 function validMove() {
-  if(board[jEnd][iEnd].status.id === HoleStatusENum.EMPTY.id) {
+  if(board[jEnd][iEnd].status.id === HoleStatusEnum.EMPTY.id) {
     if(iStart-1 === iEnd) {
       if(jStart-1 === jEnd){
         return true;           // TOP
@@ -228,26 +213,16 @@ function validMove() {
   console.log("Move is not valid");
   return false;
 }
-
-function mouseDragged() {
-  // Make data update object
-  var updateData = {
-    room: room,
-    x: mouseX,
-    y: mouseY
-  };
-
-  if(gameEnabled){
-    // update Canvas
-    updateCanvas(updateData)
-
-    // Send update message
-    sendUpdate(updateData);
-  }
-}
-
 // Function for sending to the socket
-function sendUpdate(updateData) {
+function sendUpdate() {
+
+  var updateData = {
+    iStart: Math.abs(iStart - TOTALCOLS) - 1,
+    jStart: Math.abs(jStart - TOTALROWS) - 1,
+    iEnd:   Math.abs(iEnd - TOTALCOLS) - 1,
+    jEnd:   Math.abs(jEnd - TOTALROWS) - 1,
+    room: room
+  };
   // Send that object to the socket
   socket.emit('update', updateData);
   console.log("Sending update to : " + updateData.room);
@@ -258,20 +233,33 @@ function centerCanvas(){
   cnv.position(x, 200);
 }
 
-function drawCenterButton() {
-  if(button == null)
-    button = createButton('Join Game');
+function drawJoinGameButton() {
+  if(joinGameButton == null)
+    joinGameButton = createButton('Join Game');
 
-  button.style("background-color" ,  "#4CAF50" ); //green
-  button.style("border", "none");
-  button.style("color", "white");
-  button.style("padding", "15px 32px");
-  button.style("font-size", "40px");
-  button.style("width", "249px");
-  button.position(cnv.x + (cnv.width - button.width)/2, 300);
+  joinGameButton.style("background-color" ,  "#4CAF50" ); //green
+  joinGameButton.style("border", "none");
+  joinGameButton.style("color", "white");
+  joinGameButton.style("padding", "15px 32px");
+  joinGameButton.style("font-size", "40px");
+  joinGameButton.style("width", "249px");
+  joinGameButton.position(cnv.x + 525 , cnv.y + 200);
+}
+
+function drawDoneTurnButton() {
+  if(doneTurnButton == null)
+    doneTurnButton = createButton('Done');
+
+  doneTurnButton.style("background-color" ,  "#4CAF50" ); //green
+  doneTurnButton.style("border", "none");
+  doneTurnButton.style("color", "white");
+  doneTurnButton.style("padding", "15px 32px");
+  doneTurnButton.style("font-size", "40px");
+  doneTurnButton.style("width", "249px");
+  doneTurnButton.position(cnv.x + 525 , cnv.y + 100);
 }
 
 function windowResized() {
   centerCanvas();
-  //drawCenterButton();
+  drawJoinGameButton();
 }
