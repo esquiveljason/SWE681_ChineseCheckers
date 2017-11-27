@@ -137,6 +137,7 @@ io.sockets.on('connection',
           logger.info("Sending Room to client: " + socket.id);
           //io.sockets.in(room).emit('room', {room: room, startGame: true});
           socket.emit('roomMsg', {room: room, playerTurn: false});
+          io.sockets.in(room).emit('startGameMsg');
           roomNumber++;
           room = null;
         }

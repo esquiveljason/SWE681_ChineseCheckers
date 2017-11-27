@@ -4,6 +4,8 @@ var playerTurn = false;
 var cnv;            // p5 Canvas
 var joinGameButton; // Join Game button
 var doneTurnButton; // Button to end turn
+var waitingMsg;     // Waiting Msg to display
+var statusMsg;      // "Other player turn" msg
 var room;
 
 var TOTALROWS = 17; // ROWS for board
@@ -93,6 +95,7 @@ function joinGameButtonListener() {
  * 'roomMsg'     - room name for this player
  * 'doneTurnMsg' - player 1 done doneTurnMsg
  * 'newGameMsg'  - send message to server to start new Game
+ * 'startGameMsg' - start game message from server - when 2 players are connected
  */
 function setUpSocket() {
   // Start socket connection to the server
@@ -101,8 +104,10 @@ function setUpSocket() {
   socket.on('updateMsg', updateMsgHandler);
   // Listerner to set room for socket and startGame
   socket.on('roomMsg', roomMsgHandler);
-  //
+  // Listener when other player is done with Turn
   socket.on('doneTurnMsg', doneTurnMsgHandler);
+  //
+  socket.on('startGameMsg', startGameMsgHandler);
   // Send out message to try to start new game, this user is ready to play
   socket.emit('newGameMsg');
   console.log("Emitting new game");
@@ -134,9 +139,31 @@ function roomMsgHandler(data) {
   // Set room for this user
   room = data.room;
   console.log("Received Room Update Message : " + room + " PlayerTurn Flag : " + playerTurn);
+
+  waitingMsg = createElement('p',"Waiting for Player to Join");
+  waitingMsg.style("color", "white");
+  waitingMsg.style("font-size", "24px");
+  waitingMsg.position(cnv.x + 525 , cnv.y + 100);
+
+}
+
+/*
+ * Handler for starting game message
+ */
+function startGameMsgHandler() {
+  // Remove waiting msg
+  waitingMsg.remove();
+  // instantiate status msg
+  statusMsg = createElement('p',"Other Player Turn");
+  statusMsg.style("color", "white");
+  statusMsg.style("font-size", "24px");
+  statusMsg.position(cnv.x + 525 , cnv.y + 100);
+  // instantiate done button
   drawDoneTurnButton();
-  if(!playerTurn)
-    doneTurnButton.hide()
+  if(playerTurn)
+    statusMsg.hide()
+  else
+    doneTurnButton.hide();
 }
 
 /*
@@ -152,6 +179,7 @@ function doneTurnMsgHandler() {
   jStart = -1;
   iEnd = -1;    // Positions of selected slot for ball to move to
   jEnd = -1;
+  statusMsg.hide();
 }
 
 /*
@@ -372,6 +400,7 @@ function doneTurnButtonListener() {
   socket.emit("doneTurnMsg", {room : room}); // send msg to room indicating user is done with turn
   doneTurnButton.hide(); // hide done turn button
   board[jStart][iStart].setSelected(false); // unselect hole
+  statusMsg.show();
 }
 /*
  * p5 function to resize the canvas when window is resized
