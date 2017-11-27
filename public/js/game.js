@@ -265,7 +265,9 @@ function mousePressed() {
         jStart = jEnd;
         iStart = iEnd;
         alreadyMoved = true;
-
+        if(checkWon()){
+          console.log("Winner!!!!!!!!!!!!!!!!!!!!!!!!!!!11");
+        }
       }
     }
   }
@@ -344,6 +346,31 @@ function validMove() {
   }
   console.log("Move is not valid");
   return false;
+}
+
+/*
+ * Checks to see if user has won game
+ */
+function checkWon(){
+  // All holes above in rows 0-3 are player1
+  // All other holes are either player2 or empty
+  // for all validHoles
+  var count = 0;
+  for (var j = 0; j < TOTALROWS; j++) {
+    for (var i = 0; i < TOTALCOLS; i++) {
+      if(boardHoles[j][i]) {
+        if(j < 4) { // check only top portion
+          if(board[j][i].status.id == HoleStatusEnum.PLAYER1.id) {
+            count++
+          }
+        }
+      }
+    }
+  }
+  if(count === 10)
+    return true;
+  else return
+    return false;
 }
 // Function for sending to the socket
 function sendUpdateMsg() {
