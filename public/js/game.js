@@ -1,7 +1,7 @@
 // Socket connection
 var socket;
 var gameEnabled = false;
-var cnv;
+var cnv;            // p5 Canvas
 var joinGameButton; // Join Game button
 var doneTurnButton; // Button to end turn
 var room;
@@ -58,10 +58,12 @@ function setup() {
   cnv = createCanvas(800, 510);
   background(51);
   centerCanvas();
+  frameRate(30); // 30 fps
 
   // instantiate empty 2d array for board
   board = make2DArray(boardHoles.length, boardHoles[0].length);
 
+  // Draw and color board, white for empty, blue for player1, red for player 2
   for (var j = 0; j < TOTALROWS; j++) {
     for (var i = 0; i < TOTALCOLS; i++) {
       if(boardHoles[j][i])
@@ -78,42 +80,60 @@ function setup() {
   // Draw Button to join game and start Socket
   drawJoinGameButton();
   joinGameButton.mousePressed(joinGameButtonListener);
-
 }
 
-// Listener when button is pressed.
+// Listener when join button is pressed.
 function joinGameButtonListener() {
-  joinGameButton.remove();
+  joinGameButton.remove(); // don't need no more
 
   setUpSocket();
 }
-
+/*
+ * Setupsocket for this user and set up listeners
+ * Current listeners
+ * 'updateMsg'   - player 2 update updateData
+ * 'roomMsg'     - room name for this player
+ * 'doneTurnMsg' - player 1 done doneTurnMsg
+ * 'newGameMsg'  - send message to server to start new Game
+ */
 function setUpSocket() {
   // Start socket connection to the server
   socket = io.connect('https://localhost:8000');
   // Update event called 'update' to updateCanva
-  socket.on('update', updateBoardReceived);
+  socket.on('updateMsg', updateMsgHandler);
   // Listerner to set room for socket and startGame
-  socket.on('room', setRoom);
+  socket.on('roomMsg', roomMsgHandler);
   //
-  socket.on('doneTurn', otherPlayerDone);
+  socket.on('doneTurnMsg', doneTurnMsgHandler);
   // Send out message to try to start new game, this user is ready to play
-  socket.emit('newgame');
+  socket.emit('newGameMsg');
   console.log("Emitting new game");
 
 }
-
-function updateBoardReceived(data) {
-  console.log("Update Start (i,j) : (" + data.iStart+","+ data.jStart+")" );
-  console.log("Update End   (i,j) : (" + data.iEnd+","+ data.jEnd+")" );
-  board[data.jStart][data.iStart].status = HoleStatusEnum.EMPTY;
-  board[data.jEnd][data.iEnd].status = HoleStatusEnum.PLAYER2;
+/*
+ * Handler for 'updateMsg' message is received, contains player 2 update updateData
+ * updateBoardData.iStart - i index for player 2 ball original position
+ * updateBoardData.jStart - j index for player 2 ball original position
+ * updateBoardData.iEnd   - i index for player 2 ball destination position
+ * updateBoardData.jEnd   - j index for player 2 ball destination position
+ */
+function updateMsgHandler(updateBoardData) {
+  console.log("Update Start (i,j) : (" + updateBoardData.iStart+","+ updateBoardData.jStart+")" );
+  console.log("Update End   (i,j) : (" + updateBoardData.iEnd+","+ updateBoardData.jEnd+")" );
+  board[updateBoardData.jStart][updateBoardData.iStart].status = HoleStatusEnum.EMPTY;
+  board[updateBoardData.jEnd][updateBoardData.iEnd].status = HoleStatusEnum.PLAYER2;
 }
 
-// Listner to set room when received from server
-function setRoom(data) {
-
+/*
+ * Handler for 'roomMsg' set room when received from server
+ * data.startGame - true or false flag to start game
+ * data.room - room for this user
+ */
+function roomMsgHandler(data) {
+  // from room msg, true when 2 players connected, first player connected will get true
+  // Second player connected will get false, will be second
   gameEnabled = data.startGame;
+  // Set room for this user
   room = data.room;
   console.log("Received Room Update Message : " + room + " StartGame Flag : " + gameEnabled);
   drawDoneTurnButton();
@@ -121,8 +141,10 @@ function setRoom(data) {
     doneTurnButton.hide()
 }
 
-//
-function otherPlayerDone() {
+/*
+ * Handler for 'doneTurnMsg' - shows doneTurnButton
+ */
+function doneTurnMsgHandler() {
   doneTurnButton.show();
   gameEnabled = true;
   selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
@@ -134,7 +156,10 @@ function otherPlayerDone() {
   jEnd = -1;
 }
 
-// Draw board
+/*
+ * p5 function called at framerate set to 30 fps in setUpSocket
+ * draws that status of each hole
+ */
 function draw() {
   for (var j = 0; j < 17; j++) {
     for (var i = 0; i < 25; i++) {
@@ -144,8 +169,16 @@ function draw() {
   }
 
 }
-
+/*
+ * p5 function called when mouse is pressed
+ * 1) finds with hole was pressed, set found = true if hole is pressed gets iFound, jFound
+ * 2) Checks if hole pressed is player1(current) hole and previous ball hasn't already moved
+ *    Set iStart, jStart, setSelected(true) and status to look for destination
+ * 3) if already have start, check if destination is valid
+ *    if valid move ball to empty slot, sendUpdateMsg to other player
+ */
 function mousePressed() {
+  // 1) Finds hole that was pressed
   if(gameEnabled) { // don't allow click if gamenotenabled
     var found = false;
     var iFound = -1;
@@ -166,6 +199,8 @@ function mousePressed() {
 
   if(found)
   {
+    //2) Checks if hole pressed is player1(current) hole and previous ball hasn't already moved
+    //    Set iStart, jStart, setSelected(true) and status to look for destination
     if(board[jFound][iFound].status.id === HoleStatusEnum.PLAYER1.id && !alreadyMoved)
     {
       if(iStart > 0 && jStart > 0){ // we've already selected a player1 ball previously
@@ -179,6 +214,8 @@ function mousePressed() {
 
       console.log("  Selected Start (i,j) : (" + iStart+","+ jStart+")" );
     }
+    // 3) if already have start, check if destination is valid
+    //    if valid move ball to empty slot, sendUpdateMsg to other player
     else if(selectStatus === SelectStatusEnum.END)
     {
       iEnd = iFound;
@@ -189,7 +226,7 @@ function mousePressed() {
         board[jEnd][iEnd].status = HoleStatusEnum.PLAYER1;
         board[jStart][iStart].setSelected(false);
         board[jEnd][iEnd].setSelected(true);
-        sendUpdate();
+        sendUpdateMsg();
         jStart = jEnd;
         iStart = iEnd;
         alreadyMoved = true;
@@ -199,70 +236,73 @@ function mousePressed() {
   }
 }
 
-// Checks if move is valid from (jStart, iStart)  to (jEnd, iEnd)
+/*
+ * Checks if move is valid from (jStart, iStart)  to (jEnd, iEnd)
+ * returns true is jump is valid, else false
+ */
 function validMove() {
-  if(board[jEnd][iEnd].status.id === HoleStatusEnum.EMPTY.id) { // if empty spot
-    if(!alreadyMoved) {
+  if(board[jEnd][iEnd].status.id === HoleStatusEnum.EMPTY.id) { // make sure destination is empty
+    if(!alreadyMoved) { // can only jump length 1 once, length 2 over other ball multiple times
       if(iStart-1 === iEnd) {
         if(jStart-1 === jEnd){
-          return true;           // TOP
+          return true;           // TOP LEFT JUMP
         }
         if(jStart+1 === jEnd){
-          return true;
+          return true;           // BOTTOM LEFT JUMP
         }
       }
       else if(iStart+1 === iEnd) {
         if(jStart-1 === jEnd){
-          return true;
+          return true;           // TOP RIGHT JUMP
         }
         if(jStart+1 === jEnd){
-          return true;
+          return true;           // BOTTOM RIGHT JUMP
         }
       }
       else if(jStart === jEnd) {
         if(iStart-2 === iEnd){
-          return true;
+          return true;           // LEFT JUMP
         }
         if(iStart+2 === iEnd){
-          return true;
+          return true;           // RIGHT JUMP
         }
       }
     }
 
-    // Jump over ball
+    // Jump over another ball, as many times possilbe
     if(iStart-2 === iEnd) {
       if(jStart-2 === jEnd){
-        if(board[jStart-1][iStart-1].status.id !== HoleStatusEnum.EMPTY.id) {
-          return true;           // TOP
+        if(board[jStart-1][iStart-1].status.id !== HoleStatusEnum.EMPTY.id) { // ensure jumping over ball
+          return true;           // TOP LEFT JUMP
         }
       }
       if(jStart+2 === jEnd){
         if(board[jStart+1][iStart-1].status.id !== HoleStatusEnum.EMPTY.id) {
-          return true;
+          return true;           // BOTTOM LEFT JUMP
         }
       }
     }
     else if(iStart+2 === iEnd) {
       if(jStart-2 === jEnd){
         if(board[jStart-1][iStart+1].status.id !== HoleStatusEnum.EMPTY.id) {
-          return true;
+          return true;           // TOP RIGHT JUMP
         }
       }
       if(jStart+2 === jEnd){
         if(board[jStart+1][iStart+1].status.id !== HoleStatusEnum.EMPTY.id) {
-          return true;
+          return true;           // BOTTOM RIGHT JUMP
         }
       }
     }
     else if(jStart === jEnd) {
       if(iStart-4 === iEnd){
         if(board[jStart][iStart-2].status.id !== HoleStatusEnum.EMPTY.id) {
-          return true;
+          return true;            // LEFT JUMP
         }
       }
       if(iStart+4 === iEnd){
         if(board[jStart][iStart+2].status.id !== HoleStatusEnum.EMPTY.id) {
-          return true;
+          return true;           // RIGHT JUMP
         }
       }
     }
@@ -271,25 +311,32 @@ function validMove() {
   return false;
 }
 // Function for sending to the socket
-function sendUpdate() {
+function sendUpdateMsg() {
 
   var updateData = {
+    // Conversion for player 2 view
     iStart: Math.abs(iStart - TOTALCOLS) - 1,
     jStart: Math.abs(jStart - TOTALROWS) - 1,
     iEnd:   Math.abs(iEnd - TOTALCOLS) - 1,
     jEnd:   Math.abs(jEnd - TOTALROWS) - 1,
-    room: room
+    room: room // room to send to
   };
   // Send that object to the socket
-  socket.emit('update', updateData);
+  socket.emit('updateMsg', updateData);
   console.log("Sending update to : " + updateData.room);
 }
 
+/*
+ * Center the Canvas
+ */
 function centerCanvas(){
   var x = (windowWidth - width) / 2;
   cnv.position(x, 200);
 }
 
+/*
+ * Draw Join Game Button
+ */
 function drawJoinGameButton() {
   if(joinGameButton == null)
     joinGameButton = createButton('Join Game');
@@ -302,7 +349,9 @@ function drawJoinGameButton() {
   joinGameButton.style("width", "249px");
   joinGameButton.position(cnv.x + 525 , cnv.y + 200);
 }
-
+/*
+ * Draw Done Turn Button
+ */
 function drawDoneTurnButton() {
   if(doneTurnButton == null)
     doneTurnButton = createButton('Done');
@@ -315,17 +364,20 @@ function drawDoneTurnButton() {
   doneTurnButton.style("width", "249px");
   doneTurnButton.position(cnv.x + 525 , cnv.y + 100);
 
+  // Set listener for done turn button
   doneTurnButton.mousePressed(doneTurnButtonListener);
 }
 
 // Listener when done button is pressed
 function doneTurnButtonListener() {
-  gameEnabled = false;
-  socket.emit("doneTurn", {room : room});
-  doneTurnButton.hide();
-  board[jStart][iStart].setSelected(false);
+  gameEnabled = false; // make it not clickable
+  socket.emit("doneTurnMsg", {room : room}); // send msg to room indicating user is done with turn
+  doneTurnButton.hide(); // hide done turn button
+  board[jStart][iStart].setSelected(false); // unselect hole
 }
-
+/*
+ * p5 function to resize the canvas when window is resized
+ */
 function windowResized() {
   centerCanvas();
   drawJoinGameButton();

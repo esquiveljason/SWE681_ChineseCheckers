@@ -101,19 +101,20 @@ io.sockets.on('connection',
   function(socket) {
       logger.info("We have a new client: " + socket.id);
 
-      socket.on('update', function(data) {
+      socket.on('updateMsg', function(data) {
         var sendToRoom = data.room;
         //io.sockets.in(sendToRoom).emit('update', data);
-        socket.to(sendToRoom).emit('update', data);
+        socket.to(sendToRoom).emit('updateMsg', data);
         logger.info("Sending update to Room: " + sendToRoom);
       });
-      socket.on('doneTurn', function(data) {
+
+      socket.on('doneTurnMsg', function(data) {
         var sendToRoom = data.room;
-        socket.to(sendToRoom).emit('doneTurn')
+        socket.to(sendToRoom).emit('doneTurnMsg')
       })
       // Handle when user wants to start new game, need 2 users to start game
       // Should start game when second user is accepted
-      socket.on('newgame', function() {
+      socket.on('newGameMsg', function() {
         logger.info("Received New Game Message from client: " + socket.id);
         // if no room is available make room and join, send back to user
         if(room == null) {
@@ -124,7 +125,7 @@ io.sockets.on('connection',
           });
           logger.info("Sending Room to client: " + socket.id);
           //io.sockets.in(room).emit('room', {room: room, startGame: false});
-          socket.emit('room', {room: room, startGame: true});
+          socket.emit('roomMsg', {room: room, startGame: true});
         }
         // if there is a room available to join, send back to user, clear room for next user
         // Start game
@@ -135,7 +136,7 @@ io.sockets.on('connection',
           });
           logger.info("Sending Room to client: " + socket.id);
           //io.sockets.in(room).emit('room', {room: room, startGame: true});
-          socket.emit('room', {room: room, startGame: false});
+          socket.emit('roomMsg', {room: room, startGame: false});
           roomNumber++;
           room = null;
         }
