@@ -184,7 +184,7 @@ function mousePressed() {
 
 // Checks if move is valid from (jStart, iStart)  to (jEnd, iEnd)
 function validMove() {
-  if(board[jEnd][iEnd].status.id === HoleStatusEnum.EMPTY.id) {
+  if(board[jEnd][iEnd].status.id === HoleStatusEnum.EMPTY.id) { // if empty spot
     if(iStart-1 === iEnd) {
       if(jStart-1 === jEnd){
         return true;           // TOP
@@ -207,6 +207,44 @@ function validMove() {
       }
       if(iStart+2 === iEnd){
         return true;
+      }
+    }
+
+    // Jump over ball
+    if(iStart-2 === iEnd) {
+      if(jStart-2 === jEnd){
+        if(board[jStart-1][iStart-1].status.id !== HoleStatusEnum.EMPTY.id) {
+          return true;           // TOP
+        }
+      }
+      if(jStart+2 === jEnd){
+        if(board[jStart+1][iStart-1].status.id !== HoleStatusEnum.EMPTY.id) {
+          return true;
+        }
+      }
+    }
+    else if(iStart+2 === iEnd) {
+      if(jStart-2 === jEnd){
+        if(board[jStart-1][iStart+1].status.id !== HoleStatusEnum.EMPTY.id) {
+          return true;
+        }
+      }
+      if(jStart+2 === jEnd){
+        if(board[jStart+1][iStart+1].status.id !== HoleStatusEnum.EMPTY.id) {
+          return true;
+        }
+      }
+    }
+    else if(jStart === jEnd) {
+      if(iStart-4 === iEnd){
+        if(board[jStart][iStart-2].status.id !== HoleStatusEnum.EMPTY.id) {
+          return true;
+        }
+      }
+      if(iStart+4 === iEnd){
+        if(board[jStart][iStart+2].status.id !== HoleStatusEnum.EMPTY.id) {
+          return true;
+        }
       }
     }
   }
@@ -262,4 +300,5 @@ function drawDoneTurnButton() {
 function windowResized() {
   centerCanvas();
   drawJoinGameButton();
+  drawDoneTurnButton();
 }
