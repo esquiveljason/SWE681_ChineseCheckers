@@ -396,11 +396,14 @@ function drawDoneTurnButton() {
 
 // Listener when done button is pressed
 function doneTurnButtonListener() {
-  playerTurn = false; // make it not clickable
-  socket.emit("doneTurnMsg", {room : room}); // send msg to room indicating user is done with turn
-  doneTurnButton.hide(); // hide done turn button
-  board[jStart][iStart].setSelected(false); // unselect hole
-  statusMsg.show();
+  if(alreadyMoved) // if a move was made send update else can't
+  {
+    playerTurn = false; // make it not clickable
+    socket.emit("doneTurnMsg", {room : room}); // send msg to room indicating user is done with turn
+    doneTurnButton.hide(); // hide done turn button
+    board[jStart][iStart].setSelected(false); // unselect hole
+    statusMsg.show();
+  }
 }
 /*
  * p5 function to resize the canvas when window is resized
