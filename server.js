@@ -130,7 +130,7 @@ io.sockets.on('connection',
         // if there is a room available to join, send back to user, clear room for next user
         // Start game
         else{
-          logger.info("Room is waiting: " + room);
+          logger.info("Room is waiting for Player 2: " + room);
           socket.join(room, (err) => {
             if (err) throw err;
           });
@@ -138,9 +138,17 @@ io.sockets.on('connection',
           //io.sockets.in(room).emit('room', {room: room, startGame: true});
           socket.emit('roomMsg', {room: room, playerTurn: false});
           io.sockets.in(room).emit('startGameMsg');
+          console.log("Starting game in Room : " + room);
           roomNumber++;
           room = null;
         }
+      });
+
+      // Game over message
+      socket.on('gameOverMsg', function(data) {
+        logger.info("Reveived Game Over Message from client: " + socket.id);
+        var sendToRoom = data.room;
+        socket.to(sendToRoom).emit('gameOverMsg');
       });
 
       // When socket is disconnected
