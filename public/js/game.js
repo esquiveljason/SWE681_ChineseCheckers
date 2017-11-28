@@ -6,6 +6,7 @@ var joinGameButton; // Join Game button
 var doneTurnButton; // Button to end turn
 var waitingMsg;     // Waiting Msg to display
 var statusMsg;      // "Other player turn" msg
+var gameStarted;    // Flag to indicate game has started
 var room;
 
 var TOTALROWS = 17; // ROWS for board
@@ -62,6 +63,7 @@ function setup() {
   jStart = -1;
   iEnd = -1;    // Positions of selected slot for ball to move to
   jEnd = -1;
+  gameStarted = false
 
   // Initialize Canvas
   cnv = createCanvas(800, 510);
@@ -149,10 +151,7 @@ function roomMsgHandler(data) {
   room = data.room;
   console.log("Received Room Update Message : " + room + " PlayerTurn Flag : " + playerTurn);
 
-  waitingMsg = createElement('p',"Waiting for Player to Join");
-  waitingMsg.style("color", "white");
-  waitingMsg.style("font-size", "24px");
-  waitingMsg.position(cnv.x + 525 , cnv.y + 100);
+  drawWaitingMsg();
 
 }
 
@@ -160,15 +159,15 @@ function roomMsgHandler(data) {
  * Handler for starting game message
  */
 function startGameMsgHandler() {
+  gameStarted = true;
   // Remove waiting msg
   waitingMsg.remove();
   // instantiate status msg
-  statusMsg = createElement('p',"Other Player Turn");
-  statusMsg.style("color", "white");
-  statusMsg.style("font-size", "24px");
-  statusMsg.position(cnv.x + 525 , cnv.y + 100);
+  drawStatusMsg();
   // instantiate done button
   drawDoneTurnButton();
+
+
   if(playerTurn)
     statusMsg.hide()
   else
@@ -415,9 +414,10 @@ function drawJoinGameButton() {
  * Draw Done Turn Button
  */
 function drawDoneTurnButton() {
-  if(doneTurnButton == null)
+  if(doneTurnButton == null) {
     doneTurnButton = createButton('Done');
-
+    console.log("created done button");
+  }
   doneTurnButton.style("background-color" ,  "#4CAF50" ); //green
   doneTurnButton.style("border", "none");
   doneTurnButton.style("color", "white");
@@ -428,6 +428,11 @@ function drawDoneTurnButton() {
 
   // Set listener for done turn button
   doneTurnButton.mousePressed(doneTurnButtonListener);
+
+}
+
+function repositionDoneTurnButton(){
+  doneTurnButton.position(cnv.x + 525 , cnv.y + 100);
 }
 
 // Listener when done button is pressed
@@ -441,13 +446,39 @@ function doneTurnButtonListener() {
     statusMsg.show();
   }
 }
+function drawWaitingMsg() {
+  waitingMsg = createElement('p',"Waiting for Player to Join");
+  waitingMsg.style("color", "white");
+  waitingMsg.style("font-size", "24px");
+  waitingMsg.position(cnv.x + 525 , cnv.y + 100);
+}
+function repositionWaitingMsg() {
+  waitingMsg.position(cnv.x + 525 , cnv.y + 100);
+}
+
+function drawStatusMsg() {
+  statusMsg = createElement('p',"Other Player Turn");
+  statusMsg.style("color", "white");
+  statusMsg.style("font-size", "24px");
+  statusMsg.position(cnv.x + 525 , cnv.y + 100);
+}
+function repositionStatusMsg() {
+  statusMsg.position(cnv.x + 525 , cnv.y + 100);
+}
 /*
  * p5 function to resize the canvas when window is resized
  */
 function windowResized() {
   centerCanvas();
   drawJoinGameButton();
-  drawDoneTurnButton();
-  if(!playerTurn)
-    doneTurnButton.hide()
+  if(gameStarted) {
+    repositionDoneTurnButton();
+    if(!playerTurn) {
+      doneTurnButton.hide();
+      repositionStatusMsg();
+    }
+  }
+  else {
+    repositionWaitingMsg();
+  }
 }
