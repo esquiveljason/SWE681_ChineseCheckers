@@ -1,2 +1,36 @@
+<style>
+table {
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+td, th {
+    border: 1px solid #dddddd;
+    text-align: center;
+    padding: 8px;
+}
+
+tr:nth-child(even) {
+    background-color: #dddddd;
+}
+</style>
 <h1 class="page-header">Scores</h1>
 <p> Welcome to Scores </p>
+<br>
+<table>
+  <tr>
+    <th>Username</th>
+    <th>Wins</th>
+    <th>Losses</th>
+  </tr>
+  {{#if statistic_msg}}
+    {{#each statistic_msg}}
+      <tr>
+        <td>{{username}}</th>
+        <td>{{wins}}</th>
+        <td>{{losses}}</th>
+      </tr>
+    {{/each}}
+  {{/if}}
+</table>

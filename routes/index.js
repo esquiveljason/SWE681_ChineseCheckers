@@ -15,7 +15,7 @@ const logger = require('../logger');
 // Get Homepage
 router.get('/', function(request, response){
   //response.sendFile(path.join(__dirname, '/../public/login.html'));
-  response.render('home');//login');
+  response.render('login');
 });
 
 
@@ -30,8 +30,23 @@ router.get('/home', ensureAuthenticated, (request, response) => {
 });
 
 router.get('/scores', ensureAuthenticated, (request, response) => {
-  //response.sendFile(path.join(__dirname, '/../public/scores.html'));
-  response.render('scores');
+  // Get all user from database
+  // Parse user for username, wins, losses
+  // generate string with all users, wins losses
+  // flash('statistic_msg', string)
+  // render
+  mysqlpool.getAllUsers(function(users) {
+    var x;
+    var userData = [];
+    for (x in users) {
+        userData.push({'username': users[x].username,
+                      'wins': users[x].wins,
+                      'losses': users[x].losses
+                    });
+    }
+    response.render('scores', {statistic_msg: userData});
+  });
+
 });
 
 router.get('/logout', ensureAuthenticated, (request, response) => {
@@ -59,6 +74,8 @@ passport.use( new LocalStrategy(
       logger.info(user.lastname);
       logger.info(user.username);
       logger.info(user.password);
+      logger.info(user.wins);
+      logger.info(user.losses);
 
       // compare password with database password
       bcrypt.compare(password, user.password, function(err, isMatch) {

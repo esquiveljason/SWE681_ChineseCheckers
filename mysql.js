@@ -28,6 +28,8 @@ mysqlpool.getConnection(function(err, connection){
             + 'lastname VARCHAR(30),'
             + 'username VARCHAR(30),'
             + 'password VARCHAR(80),'
+            + 'wins INT NOT NULL,'
+            + 'losses INT NOT NULL,'
             + 'PRIMARY KEY(id)'
             +  ')',
             function (err, results, fields) {
@@ -43,6 +45,9 @@ mysqlpool.getConnection(function(err, connection){
 
 module.exports = mysqlpool;
 
+/*
+ * Debugging Statement to print all users
+ */
 module.exports.listUsers = function(connection) {
   sql_stmt = "SELECT * FROM users;";
   mysqlpool.getConnection(function(err, connection) {
@@ -55,11 +60,16 @@ module.exports.listUsers = function(connection) {
   });
 }
 
+/*
+ * Add user to database from registration page using firstname, lastname, username and password
+ * wins and losses are initialized to zero
+ */
 module.exports.addUser = function(firstname, lastname, username, password) {
   bcrypt.genSalt(10, function(err, salt) {
     bcrypt.hash(password, salt, function(err, hash) {
-      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password) VALUES (?,?,?,?)";
-      var values = [firstname, lastname, username, hash];
+      var winsInit = lossesInit = 0; // initialize wins losses to zero
+      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password, wins, losses) VALUES (?,?,?,?,?,?)";
+      var values = [firstname, lastname, username, hash, winsInit, lossesInit];
 
       sql_stmt = mysql.format(sql_stmt, values);
 
@@ -109,3 +119,24 @@ module.exports.getUserByUsername = function(username, callback) {
     connection.release();
   });
 }
+
+/*
+ * Get all usernames
+ */
+ module.exports.getAllUsers = function(callback) {
+   var sql_stmt = "SELECT * FROM users";
+
+   sql_stmt = mysql.format(sql_stmt);
+
+   mysqlpool.getConnection(function(err, connection) {
+     if(err) throw err;
+     connection.query('USE chinesecheckersdb', function (err, results, fields) {
+         if (err) throw err;
+     });
+     connection.query(sql_stmt, function (err, allUsers, fields) {
+       if(err) throw err;
+       callback(allUsers);
+     });
+     connection.release();
+   });
+ }
