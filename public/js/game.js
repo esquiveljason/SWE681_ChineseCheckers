@@ -89,6 +89,13 @@ function setup() {
   // Draw Button to join game and start Socket
   drawJoinGameButton();
   joinGameButton.mousePressed(joinGameButtonListener);
+
+  //TESTING
+  var username = document.getElementById('user').name;
+  gameOverMsg = createElement('p',username);
+  gameOverMsg.style("color", "white");
+  gameOverMsg.style("font-size", "24px");
+  gameOverMsg.position(cnv.x + 650 , cnv.y + 15);
 }
 // Set Up board
 function setupBoard() {
