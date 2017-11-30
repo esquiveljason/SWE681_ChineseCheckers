@@ -10,6 +10,8 @@ var gameOverMsg     // Game over message
 var gameState;    // Indicates status of game waiting, active, finished
 var room;           // assigned room for this user
 
+var username;
+
 var GameStateEnum = {
   GAMEWAIT : 200,
   GAMEJOINED : 201,
@@ -91,7 +93,7 @@ function setup() {
   joinGameButton.mousePressed(joinGameButtonListener);
 
   //TESTING
-  var username = document.getElementById('user').name;
+  username = document.getElementById('user').name;
   gameOverMsg = createElement('p',username);
   gameOverMsg.style("color", "white");
   gameOverMsg.style("font-size", "24px");
@@ -156,7 +158,7 @@ function setUpSocket() {
   // Game Over message
   socket.on('gameOverMsg', gameOverMsgHandler);
   // Send out message to try to start new game, this user is ready to play
-  socket.emit('newGameMsg');
+  socket.emit('newGameMsg', {username: username});
   console.log("Emitting new game");
 
 }
@@ -353,7 +355,7 @@ function gameOver(won) {
   drawGameOverMsg(won);
 
   // Send message the game over
-  socket.emit('gameOverMsg', {room: room}); // needs room to forward
+  socket.emit('gameOverMsg', {room: room, username: username}); // needs room to forward
 }
 
 

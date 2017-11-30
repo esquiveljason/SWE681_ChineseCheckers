@@ -11,6 +11,8 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var routes = require('./routes/index');
 
+const mysqlpool = require('./mysqlpool');
+
 const logger = require('./logger');
 const morgan = require('morgan');
 
@@ -115,7 +117,7 @@ io.sockets.on('connection',
       })
       // Handle when user wants to start new game, need 2 users to start game
       // Should start game when second user is accepted
-      socket.on('newGameMsg', function() {
+      socket.on('newGameMsg', function(data) {
         logger.info("Received New Game Message from client: " + socket.id);
         // if no room is available make room and join, send back to user
         if(room == null) {
@@ -127,6 +129,13 @@ io.sockets.on('connection',
           logger.info("Sending Room to client: " + socket.id);
           //io.sockets.in(room).emit('room', {room: room, startGame: false});
           socket.emit('roomMsg', {room: room, playerTurn: true});
+
+          // Update User Status to 'INROOM'
+          mysqlpool.updateUserStatusInRoom(data.username, function() {
+          });
+          // Add room to gameDb entry
+          mysqlpool.addGame(room, data.username, function() {
+          });
         }
         // if there is a room available to join, send back to user, clear room for next user
         // Start game
@@ -138,6 +147,17 @@ io.sockets.on('connection',
           logger.info("Sending Room to client: " + socket.id);
           //io.sockets.in(room).emit('room', {room: room, startGame: true});
           socket.emit('roomMsg', {room: room, playerTurn: false});
+
+          // Update User Status to 'INROOM'
+          mysqlpool.updateUserStatusInRoom(data.username, function() {
+
+          });
+          // Add room to gameDb entry
+          mysqlpool.updateGameDbPlayer2(room, data.username, function () {
+
+          });
+
+          // Send 'startGameMsg' to all users in room
           io.sockets.in(room).emit('startGameMsg');
           console.log("Starting game in Room : " + room);
           roomNumber++;
@@ -148,8 +168,26 @@ io.sockets.on('connection',
       // Game over message
       socket.on('gameOverMsg', function(data) {
         logger.info("Reveived Game Over Message from client: " + socket.id);
-        var sendToRoom = data.room;
-        socket.to(sendToRoom).emit('gameOverMsg');
+        var room = data.room;
+        var winnerUsername = data.username;
+        socket.to(room).emit('gameOverMsg');
+        // Update User Status to 'INROOM'
+        mysqlpool.incrementUserWins(winnerUsername, function() {
+        });
+        mysqlpool.updateUserStatusNotInRoom(winnerUsername, function() {
+        });
+
+        mysqlpool.getLoserUsernameByRoom(room, winnerUsername, function(loserUsername)
+        {
+          mysqlpool.incrementUserLosses(loserUsername, function() {
+          });
+          mysqlpool.updateUserStatusNotInRoom(loserUsername, function() {
+          });
+        });
+
+        mysqlpool.setGameFinished(room, function() {
+          
+        })
       });
 
       // When socket is disconnected

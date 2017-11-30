@@ -7,7 +7,7 @@ const { check, validationResult } = require('express-validator/check');
 var router = express.Router();
 
 
-const mysqlpool = require('../mysql');
+const mysqlpool = require('../mysqlpool');
 const logger = require('../logger');
 
 
