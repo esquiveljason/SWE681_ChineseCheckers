@@ -170,20 +170,44 @@ io.sockets.on('connection',
         mysqlpool.incrementUserWins(winnerUsername, function() {});
         mysqlpool.updateUserStatusNotInRoom(winnerUsername, function() {});
         mysqlpool.updateUserRoom(winnerUsername, "", function() {}); // empty room for user not in game
+        mysqlpool.updateUserSocketId(winnerUsername, "", function() {});
 
         mysqlpool.getOtherUserInRoom(winnerUsername, room, function(loserUser, foundUser) {
           if(!foundUser) {
             logger.info(`No other User in Room : ${room} with User : ${winnerUsername}`);
+          } else {
+            mysqlpool.incrementUserLosses(loserUser.username, function() {});
+            mysqlpool.updateUserStatusNotInRoom(loserUser.username, function() {});
+            mysqlpool.updateUserRoom(loserUser.username, "", function() {}); // empty room for user not in game
+            mysqlpool.updateUserSocketId(loserUser.username, "", function() {});
           }
-          mysqlpool.incrementUserLosses(loserUser.username, function() {});
-          mysqlpool.updateUserStatusNotInRoom(loserUser.username, function() {});
-          mysqlpool.updateUserRoom(loserUser.username, "", function() {}); // empty room for user not in game
         });
       });
 
       // When socket is disconnected
       socket.on('disconnect', function() {
         logger.info("We have disconnected client: " + socket.id);
+        mysqlpool.getUserBySocketId(socket.id, function(disconnectedUser, foundUser) {
+          if(foundUser){
+            mysqlpool.updateUserRoom(disconnectedUser.username, "", function() {});
+            mysqlpool.updateUserStatusNotInRoom(disconnectedUser.username, function() {});
+            mysqlpool.updateUserSocketId(disconnectedUser.username, "", function() {});
+            mysqlpool.incrementUserLosses(disconnectedUser.username, function () {});
+
+            mysqlpool.getOtherUserInRoom(disconnectedUser.username, disconnectedUser.room, function(connectedUser, foundConnectedUser) {
+              if(!foundConnectedUser) {
+                logger.info(`No other User in Room : ${room} with User : ${winnerUsername}`);
+              } else {
+                mysqlpool.incrementUserWins(connectedUser.username, function() {});
+                mysqlpool.updateUserStatusNotInRoom(connectedUser.username, function() {});
+                mysqlpool.updateUserSocketId(connectedUser.username, "", function() {});
+                mysqlpool.updateUserRoom(connectedUser.username, "", function() {}); // empty room for user not in game
+
+                io.sockets.in(connectedUser.room).emit('defaultWinMsg'); //Send message to still connected User "You are winner"
+              }
+            });
+          }
+        });
       });
   }
 );

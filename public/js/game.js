@@ -159,6 +159,7 @@ function joinGameButtonListener() {
  * 'newGameMsg'  - send message to server to start new Game
  * 'startGameMsg' - start game message from server - when 2 players are connected
  * 'gameOverMsg' - send Game over message to other player if sending (won) receiving (lost)
+ * 'defaultWinMsg' - Automatically win other user disconnected
  */
 function setUpSocket() {
   // Start socket connection to the server
@@ -173,6 +174,8 @@ function setUpSocket() {
   socket.on('startGameMsg', startGameMsgHandler);
   // Game Over message
   socket.on('gameOverMsg', gameOverMsgHandler);
+  // Automatic win message
+  socket.on('defaultWinMsg', defaultWinMsgHandler);
   // Send out message to try to start new game, this user is ready to play
   socket.emit('newGameMsg', {username: username});
   console.log("Emitting new game");
@@ -269,6 +272,23 @@ function gameOverMsgHandler() {
   drawGameOverMsg(false); // false for loser
 }
 
+/*
+ * Handler for 'defaultWinMsg'
+ * If user receives this, automatic win
+ */
+function defaultWinMsgHandler() {
+  console.log("Winner!!!!!!!!!!!!!!!!!!!!!!!!!!!11");
+  gameState = GameStateEnum.GAMEFINISHED;
+
+  // hide done button and status msg
+  doneTurnButton.hide();
+  statusMsg.hide();
+  repositionJoinGameButton(); // reposition just in case
+  joinGameButton.show();
+
+  // call draw game over msg
+  drawGameOverMsg(true); // false for loser
+}
 /*
  * p5 function called at framerate set to 30 fps in setUpSocket
  * draws that status of each hole

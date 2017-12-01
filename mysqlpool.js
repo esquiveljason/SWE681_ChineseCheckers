@@ -137,6 +137,37 @@ module.exports.getUserByUsername = function(username, callback) {
     });
   });
 }
+/*
+ * get user from db using socketid
+ */
+module.exports.getUserBySocketId = function(socketId, callback) {
+  var sql_stmt = "SELECT * FROM users WHERE socketid = ?";
+  var values = [socketId];
+  var user;
+
+  sql_stmt = mysql.format(sql_stmt, values);
+
+  mysqlpool.getConnection(function(err, connection) {
+    if(err) throw err;
+    connection.query('USE chinesecheckersdb', function (err, results, fields) {
+      if (err) throw err;
+      connection.query(sql_stmt, function (err, results, fields) {
+        if(err) throw err;
+        // Single match was found, should never be more than 1
+        if(results.length === 1) {
+          user = results[0];
+          logger.info(`MySQL number of matches with ${socketId} : ` + results.length);
+          callback(user, true);
+        }
+        // No matches where found
+        else {
+          callback(null, false);
+        }
+      });
+      connection.release();
+    });
+  });
+}
 
 /*
  */
