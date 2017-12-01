@@ -13,13 +13,13 @@ const logger = require('../logger');
 
 
 // Get Homepage
-router.get('/', function(request, response){
+router.get('/', checkAuthenticated, (request, response) => {
   //response.sendFile(path.join(__dirname, '/../public/login.html'));
   response.render('login');
 });
 
 
-router.get('/register', (request, response) => {
+router.get('/register', checkAuthenticated, (request, response) => {
   //response.sendFile(path.join(__dirname,'/../public/register.html'));
   response.render('register');
 });
@@ -165,6 +165,14 @@ function ensureAuthenticated(req, res, next){
 	} else {
 		//req.flash('error_msg','You are not logged in');
 		res.redirect("/");
+	}
+}
+function checkAuthenticated(req, res, next){
+	if(req.isAuthenticated()){
+		res.redirect("/home");
+	} else {
+		//req.flash('error_msg','You are not logged in');
+		return next();
 	}
 }
 
