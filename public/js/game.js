@@ -107,14 +107,30 @@ function setupBoard() {
   // Set up Holes for all valid ones in board
   for (var j = 0; j < TOTALROWS; j++) {
     for (var i = 0; i < TOTALCOLS; i++) {
-      if(boardHoles[j][i])
-        if(j > 12) { // Player 1
-          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1)
-        } else if(j < 4) { // Player 2
-          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2)
+      if(boardHoles[j][i]) {
+        //
+      /* FOR TESTTTT
+        if(j > 12 && j < 17) { // Player 1
+          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2);
+        } else if(j > 0 && j < 4) { // Player 2
+          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1);
         } else { // all other holes
-          board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY)
+          if( j === 4 && i ===12) {
+            board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1);
+          } else if( j === 12 && i ===12) {
+            board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2);
+          } else {
+            board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY);
+          }*/
+
+        if(j > 12) { // Player 1
+          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1);
+        } else if(j < 4) { // Player 2
+          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2);
+        } else { // all other holes
+          board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY);
         }
+      }
     }
   }
 }

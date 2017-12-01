@@ -6,13 +6,8 @@ require('console.table');
 
 var UserStatusEnum = {
   NOTINROOM : "NOTINROOM",
-  INROOM : "INROOM"
-};
-
-var GameDBStatusEnum = {
-  WAITING : "GAMEWAITING",
-  ACTIVE  : "GAMEACTIVE",
-  DONE    : "GAMEFINISHED"
+  INROOM : "INROOM",
+  DISCONNECTED : "DISCONNECTED"
 };
 
 // Init mysql Connection
@@ -40,22 +35,10 @@ mysqlpool.getConnection(function(err, connection){
             + 'username VARCHAR(30),'
             + 'password VARCHAR(80),'
             + 'wins INT NOT NULL,'
-            + 'losses VARCHAR(30),'
+            + 'losses INT NOT NULL,'
             + 'status VARCHAR(30),'
-            + 'PRIMARY KEY(id)'
-            +  ')',
-            function (err, results, fields) {
-              if (err) throw err;
-              //logger.info(results);
-            }
-        );
-        // Create game table if it doesn't exist
-        connection.query('CREATE TABLE IF NOT EXISTS games('
-            + 'id INT NOT NULL AUTO_INCREMENT,'
             + 'room VARCHAR(30),'
-            + 'player1 VARCHAR(30),'
-            + 'player2 VARCHAR(30),'
-            + 'status VARCHAR(30),'
+            + 'socketid VARCHAR(30),'
             + 'PRIMARY KEY(id)'
             +  ')',
             function (err, results, fields) {
@@ -99,8 +82,8 @@ module.exports.addUser = function(firstname, lastname, username, password) {
     bcrypt.hash(password, salt, function(err, hash) {
       var winsInit = lossesInit = 0; // initialize wins losses to zero
       var statusInit = UserStatusEnum.NOTINROOM; //Initialize not in room
-      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password, wins, losses, status) VALUES (?,?,?,?,?,?,?)";
-      var values = [firstname, lastname, username, hash, winsInit, lossesInit, statusInit];
+      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password, wins, losses, status, room, socketid) VALUES (?,?,?,?,?,?,?,?,?)";
+      var values = [firstname, lastname, username, hash, winsInit, lossesInit, statusInit, "", ""];
 
       sql_stmt = mysql.format(sql_stmt, values);
 
@@ -129,6 +112,37 @@ module.exports.addUser = function(firstname, lastname, username, password) {
 module.exports.getUserByUsername = function(username, callback) {
   var sql_stmt = "SELECT * FROM users WHERE username = ?";
   var values = [username];
+  var user;
+
+  sql_stmt = mysql.format(sql_stmt, values);
+
+  mysqlpool.getConnection(function(err, connection) {
+    if(err) throw err;
+    connection.query('USE chinesecheckersdb', function (err, results, fields) {
+      if (err) throw err;
+      connection.query(sql_stmt, function (err, results, fields) {
+        if(err) throw err;
+        // Single match was found, should never be more than 1
+        if(results.length === 1) {
+          user = results[0];
+          logger.info(`MySQL number of matches with ${username} : ` + results.length);
+          callback(user, true);
+        }
+        // No matches where found
+        else {
+          callback(null, false);
+        }
+      });
+      connection.release();
+    });
+  });
+}
+
+/*
+ */
+module.exports.getOtherUserInRoom = function(username, room, callback) {
+  var sql_stmt = "SELECT * FROM users WHERE username != ? and room = ?";
+  var values = [username, room];
   var user;
 
   sql_stmt = mysql.format(sql_stmt, values);
@@ -256,8 +270,52 @@ module.exports.incrementUserLosses = function(username) {
 }
 
 /*
- * Add Game entry with {room, player1(username) }
+ * Handles sql query update user socketid
  */
+module.exports.updateUserSocketId = function(username, socketId) {
+  var sql_stmt = 'UPDATE users SET socketid = ? WHERE username = ?';
+  var values = [socketId, username];
+
+  sql_stmt = mysql.format(sql_stmt, values);
+
+  mysqlpool.getConnection(function(err, connection) {
+    if(err) throw err;
+    connection.query('USE chinesecheckersdb', function (err, results, fields) {
+      if (err) throw err;
+      connection.query(sql_stmt, function (err, results, fields) {
+        if(err) throw err;
+        logger.info(`Updated ${username} Socket Id to ${socketId}`);
+      });
+      connection.release();
+    });
+  });
+}
+
+/*
+ * Handles sql query update user room
+ */
+module.exports.updateUserRoom = function(username, room) {
+  var sql_stmt = 'UPDATE users SET room = ? WHERE username = ?';
+  var values = [room, username];
+
+  sql_stmt = mysql.format(sql_stmt, values);
+
+  mysqlpool.getConnection(function(err, connection) {
+    if(err) throw err;
+    connection.query('USE chinesecheckersdb', function (err, results, fields) {
+      if (err) throw err;
+      connection.query(sql_stmt, function (err, results, fields) {
+        if(err) throw err;
+        logger.info(`Updated ${username} Room to ${room}`);
+      });
+      connection.release();
+    });
+  });
+}
+
+/*
+ * Add Game entry with {room, player1(username) }
+
 module.exports.addGame = function(room, player1) {
   var sql_stmt = "INSERT INTO games (room, player1, player2, status ) VALUES (?,?,?,?)";
   var newGameStatus = GameDBStatusEnum.WAITING;
@@ -346,4 +404,4 @@ module.exports.setGameFinished = function updateUserStatus(room) {
       connection.release();
     });
   });
-}
+}*/
