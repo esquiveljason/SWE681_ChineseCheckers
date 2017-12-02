@@ -233,6 +233,12 @@ module.exports.updateUserStatusInRoom = function(username) {
 module.exports.updateUserStatusNotInRoom = function(username) {
   updateUserStatus(username, UserStatusEnum.NOTINROOM);
 }
+/*
+ * Update User Status to 'DISCONNECTED' for Username
+ */
+module.exports.updateUserStatusDisconnected = function(username) {
+  updateUserStatus(username, UserStatusEnum.DISCONNECTED);
+}
 
 /*
  * Handles sql query to update status for user
