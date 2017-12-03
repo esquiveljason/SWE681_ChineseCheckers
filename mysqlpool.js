@@ -1,6 +1,9 @@
 var mysql = require('mysql');
 var bcrypt = require('bcryptjs');
 const logger = require('./logger');
+const emptyBoard = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
+const initBoard  = "rrrrrrrrrrooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobbbbbbbbbb";
+
 
 require('console.table');
 
@@ -39,6 +42,8 @@ mysqlpool.getConnection(function(err, connection){
             + 'status VARCHAR(30),'
             + 'room VARCHAR(30),'
             + 'socketid VARCHAR(30),'
+            + 'turn BIT,'
+            + 'board CHAR(121),'
             + 'PRIMARY KEY(id)'
             +  ')',
             function (err, results, fields) {
@@ -82,8 +87,8 @@ module.exports.addUser = function(firstname, lastname, username, password) {
     bcrypt.hash(password, salt, function(err, hash) {
       var winsInit = lossesInit = 0; // initialize wins losses to zero
       var statusInit = UserStatusEnum.NOTINROOM; //Initialize not in room
-      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password, wins, losses, status, room, socketid) VALUES (?,?,?,?,?,?,?,?,?)";
-      var values = [firstname, lastname, username, hash, winsInit, lossesInit, statusInit, "", ""];
+      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password, wins, losses, status, room, socketid, turn, board) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+      var values = [firstname, lastname, username, hash, winsInit, lossesInit, statusInit, "", "", false, initBoard];
 
       sql_stmt = mysql.format(sql_stmt, values);
 
@@ -344,6 +349,28 @@ module.exports.updateUserRoom = function(username, room) {
       connection.query(sql_stmt, function (err, results, fields) {
         if(err) throw err;
         logger.info(`Updated ${username} Room to ${room}`);
+      });
+      connection.release();
+    });
+  });
+}
+
+/*
+ * Handles sql query update user turn
+ */
+module.exports.updateUserTurn = function(username, turn) {
+  var sql_stmt = 'UPDATE users SET turn = ? WHERE username = ?';
+  var values = [turn, username];
+
+  sql_stmt = mysql.format(sql_stmt, values);
+
+  mysqlpool.getConnection(function(err, connection) {
+    if(err) throw err;
+    connection.query('USE chinesecheckersdb', function (err, results, fields) {
+      if (err) throw err;
+      connection.query(sql_stmt, function (err, results, fields) {
+        if(err) throw err;
+        logger.info(`Updated ${username} Turn to ${turn}`);
       });
       connection.release();
     });

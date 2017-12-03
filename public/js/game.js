@@ -123,13 +123,16 @@ function setupBoard() {
             board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY);
           }*/
 
+        /*
         if(j > 12) { // Player 1
           board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1);
         } else if(j < 4) { // Player 2
           board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2);
         } else { // all other holes
           board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY);
-        }
+        }*/
+
+        board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY);
       }
     }
   }
@@ -209,6 +212,25 @@ function roomMsgHandler(data) {
   gameState = GameStateEnum.GAMEJOINED;
   // Set room for this user
   room = data.room;
+  var boardTemplate = data.board;
+  var b_c = 0;
+  // Update board
+  for (var j = 0; j < TOTALROWS; j++) {
+    for (var i = 0; i < TOTALCOLS; i++) {
+      if(boardHoles[j][i]) {
+        if(boardTemplate[b_c] === "b") { // Player1
+          board[j][i].status = HoleStatusEnum.PLAYER1;
+        } else if(boardTemplate[b_c] === "r") { // Player2
+          board[j][i].status = HoleStatusEnum.PLAYER2;
+        } else {
+          board[j][i].status = HoleStatusEnum.EMPTY;
+        }
+        b_c++;
+      }
+    }
+  }
+
+
   console.log("Received Room Update Message : " + room + " PlayerTurn Flag : " + playerTurn);
 
 
@@ -221,6 +243,7 @@ function roomMsgHandler(data) {
  * Handler for starting game message
  */
 function startGameMsgHandler() {
+  console.log("Received Start Game Message");
   gameState = GameStateEnum.GAMEACTIVE;
   // Remove waiting msg
   waitingMsg.hide();
@@ -238,7 +261,7 @@ function startGameMsgHandler() {
  * Handler for 'doneTurnMsg' - shows doneTurnButton
  */
 function doneTurnMsgHandler() {
-
+  console.log("Received Done Turn Msg");
   playerTurn = true;
   selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
   alreadyMoved = false; // Already started moving, prevent moving of another ball
@@ -571,6 +594,7 @@ function doneTurnButtonListener() {
     doneTurnButton.hide(); // hide done turn button
     board[jStart][iStart].setSelected(false); // unselect hole
     statusMsg.show();
+
   }
 }
 function drawWaitingMsg() {
