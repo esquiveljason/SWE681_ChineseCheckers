@@ -1,8 +1,7 @@
 var mysql = require('mysql');
 var bcrypt = require('bcryptjs');
 const logger = require('./logger');
-const emptyBoard = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
-const initBoard  = "rrrrrrrrrrooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobbbbbbbbbb";
+const initBoard  = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
 
 
 require('console.table');

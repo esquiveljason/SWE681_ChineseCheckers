@@ -136,21 +136,13 @@ io.sockets.on('connection',
           });
           mysqlpool.updateUserRoom(username, room, function() {});
           logger.info("Sending Room to client: " + socket.id);
-          //io.sockets.in(room).emit('room', {room: room, startGame: false});
 
-          // get board and turn from db, send with roommsg
-          mysqlpool.getUserByUsername(username, function(user, foundUser) {
+          var playerTurn = true;
 
-            var board = user.board;
-            var playerTurn = true;
+          mysqlpool.updateUserTurn(username, playerTurn, function() {});
 
-            mysqlpool.updateUserTurn(username, playerTurn, function() {});
+          socket.emit('roomMsg', {room: room, playerTurn: playerTurn});
 
-            socket.emit('roomMsg', {room: room, playerTurn: playerTurn, board: board});
-            // Send 'startGameMsg' to all users in room
-            io.sockets.in(room).emit('startGameMsg');
-            console.log("Starting game in Room : " + room);
-          });
         }
         // if there is a room available to join, send back to user, clear room for next user
         // Start game
@@ -162,20 +154,14 @@ io.sockets.on('connection',
           });
           mysqlpool.updateUserRoom(username, room, function() {});
           logger.info("Sending Room to client: " + socket.id);
-          // get board and turn from db, send with roommsg
-          mysqlpool.getUserByUsername(username, function(user, foundUser) {
 
-            var board = user.board;
-            var playerTurn = false;
-            var room = user.room;
-            mysqlpool.updateUserTurn(username, playerTurn, function() {});
+          var playerTurn = false;
+          mysqlpool.updateUserTurn(username, playerTurn, function() {});
 
-            socket.emit('roomMsg', {room: room, playerTurn: playerTurn, board: board});
-            // Send 'startGameMsg' to all users in room
-            io.sockets.in(room).emit('startGameMsg');
-            console.log("Starting game in Room : " + room);
-          });
-
+          socket.emit('roomMsg', {room: room, playerTurn: playerTurn});
+          // Send 'startGameMsg' to all users in room
+          io.sockets.in(room).emit('startGameMsg');
+          console.log("Starting game in Room : " + room);
 
           roomNumber++;
           room = null;

@@ -10,6 +10,8 @@ var gameOverMsg     // Game over message
 var gameState;    // Indicates status of game waiting, active, finished
 var room;           // assigned room for this user
 
+const boardTemplate  = "rrrrrrrrrrooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobbbbbbbbbb";
+
 var username;
 
 var GameStateEnum = {
@@ -99,44 +101,29 @@ function setup() {
   gameOverMsg.style("font-size", "24px");
   gameOverMsg.position(cnv.x + 650 , cnv.y + 15);
 }
-// Set Up board
+// Setup board
 function setupBoard() {
+  var b_c = 0;
   // instantiate empty 2d array for board
   board = make2DArray(boardHoles.length, boardHoles[0].length);
-
   // Set up Holes for all valid ones in board
   for (var j = 0; j < TOTALROWS; j++) {
     for (var i = 0; i < TOTALCOLS; i++) {
       if(boardHoles[j][i]) {
         //
-      /* FOR TESTTTT
-        if(j > 12 && j < 17) { // Player 1
-          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2);
-        } else if(j > 0 && j < 4) { // Player 2
+        if(boardTemplate[b_c] === "b") { // Player1
           board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1);
-        } else { // all other holes
-          if( j === 4 && i ===12) {
-            board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1);
-          } else if( j === 12 && i ===12) {
-            board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2);
-          } else {
-            board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY);
-          }*/
-
-        /*
-        if(j > 12) { // Player 1
-          board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1);
-        } else if(j < 4) { // Player 2
+        } else if(boardTemplate[b_c] === "r") { // Player2
           board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2);
-        } else { // all other holes
+        } else {
           board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY);
-        }*/
-
-        board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY);
+        }
+        b_c++;
       }
     }
   }
 }
+
 // Listener when join button is pressed.
 function joinGameButtonListener() {
   joinGameButton.hide(); // hide Join Button
@@ -206,34 +193,11 @@ function updateMsgHandler(updateBoardData) {
 function roomMsgHandler(data) {
   // from room msg, true when 2 players connected, first player connected will get true
   // Second player connected will get false, will be second
-  setupBoard();
-
   playerTurn = data.playerTurn;
   gameState = GameStateEnum.GAMEJOINED;
-  // Set room for this user
-  room = data.room;
-  var boardTemplate = data.board;
-  var b_c = 0;
-  // Update board
-  for (var j = 0; j < TOTALROWS; j++) {
-    for (var i = 0; i < TOTALCOLS; i++) {
-      if(boardHoles[j][i]) {
-        if(boardTemplate[b_c] === "b") { // Player1
-          board[j][i].status = HoleStatusEnum.PLAYER1;
-        } else if(boardTemplate[b_c] === "r") { // Player2
-          board[j][i].status = HoleStatusEnum.PLAYER2;
-        } else {
-          board[j][i].status = HoleStatusEnum.EMPTY;
-        }
-        b_c++;
-      }
-    }
-  }
-
+  room = data.room; // Set room for this user
 
   console.log("Received Room Update Message : " + room + " PlayerTurn Flag : " + playerTurn);
-
-
 
   waitingMsg.show();
 
