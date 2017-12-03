@@ -377,33 +377,11 @@ module.exports.updateUserTurn = function(username, turn) {
 }
 
 /*
- * Add Game entry with {room, player1(username) }
-
-module.exports.addGame = function(room, player1) {
-  var sql_stmt = "INSERT INTO games (room, player1, player2, status ) VALUES (?,?,?,?)";
-  var newGameStatus = GameDBStatusEnum.WAITING;
-  var values = [room, player1, "", newGameStatus];
-
-  sql_stmt = mysql.format(sql_stmt, values);
-
-  mysqlpool.getConnection(function(err, connection) {
-    if(err) throw err;
-    connection.query('USE chinesecheckersdb', function (err, results, fields) {
-      if (err) throw err;
-
-      connection.query(sql_stmt, function (err, results, fields) {
-          if (err) throw err;
-          logger.info(`Created new Game Entry Room : ${room} Player1 : ${player1} Status : ${newGameStatus}`);
-      });
-      connection.release();
-    });
-  });
-}
-
-module.exports.updateGameDbPlayer2 = function updateUserStatus(room, player2) {
-  var sql_stmt = 'UPDATE games SET player2 = ?, status = ? WHERE room = ?';
-  var newGameStatus = GameDBStatusEnum.ACTIVE;
-  var values = [player2, newGameStatus, room];
+ * Handles sql query update user turn
+ */
+module.exports.updateUserBoard = function(username, board) {
+  var sql_stmt = 'UPDATE users SET board = ? WHERE username = ?';
+  var values = [board, username];
 
   sql_stmt = mysql.format(sql_stmt, values);
 
@@ -413,58 +391,9 @@ module.exports.updateGameDbPlayer2 = function updateUserStatus(room, player2) {
       if (err) throw err;
       connection.query(sql_stmt, function (err, results, fields) {
         if(err) throw err;
-        logger.info(`Updated Game Entry Room : ${room} Player2 : ${player2} Status : ${newGameStatus}`);
+        logger.info(`Updated ${username} Board`);
       });
       connection.release();
     });
   });
 }
-
-module.exports.getLoserUsernameByRoom = function(room, winnerUsername, callback) {
-  var sql_stmt = "SELECT * FROM games WHERE room = ?";
-  var values = [room];
-  var user;
-
-  sql_stmt = mysql.format(sql_stmt, values);
-
-  mysqlpool.getConnection(function(err, connection) {
-    if(err) throw err;
-    connection.query('USE chinesecheckersdb', function (err, results, fields) {
-      if (err) throw err;
-      connection.query(sql_stmt, function (err, results, fields) {
-        if(err) throw err;
-
-        // Single match was found, should never be more than 1
-        if(results.length === 1) {
-          game = results[0];
-          if(game.player1 === winnerUsername) {
-            callback(game.player2);
-          } else if(game.player2 === winnerUsername) {
-            callback(game.player1);
-          }
-        }
-      });
-      connection.release();
-    });
-  });
-}
-
-module.exports.setGameFinished = function updateUserStatus(room) {
-  var sql_stmt = 'UPDATE games SET status = ? WHERE room = ?';
-  var newGameStatus = GameDBStatusEnum.DONE;
-  var values = [newGameStatus, room];
-
-  sql_stmt = mysql.format(sql_stmt, values);
-
-  mysqlpool.getConnection(function(err, connection) {
-    if(err) throw err;
-    connection.query('USE chinesecheckersdb', function (err, results, fields) {
-      if (err) throw err;
-      connection.query(sql_stmt, function (err, results, fields) {
-        if(err) throw err;
-        logger.info(`Updated Game Entry Room : ${room} NEW Status : ${newGameStatus}`);
-      });
-      connection.release();
-    });
-  });
-}*/

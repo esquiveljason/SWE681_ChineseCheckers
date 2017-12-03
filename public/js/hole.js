@@ -6,9 +6,9 @@
  var WIDTH = 25;
 
 var HoleStatusEnum = {
-   EMPTY: {id: 100, color: "white"},
-   PLAYER1: {id: 101, color: "blue"},
-   PLAYER2: {id: 102, color: "red"}
+   EMPTY: {id: 100, color: "white", rep: "o"},
+   PLAYER1: {id: 101, color: "blue", rep: "b"},
+   PLAYER2: {id: 102, color: "red", rep: "r"}
  };
 
 /*
@@ -48,6 +48,8 @@ Hole.prototype.clicked = function() {
 Hole.prototype.setSelected = function(selected) {
   this.selected = selected;
 }
+
+Hole.prototype
 
 function star(x, y, radius1, radius2, npoints) {
   push();

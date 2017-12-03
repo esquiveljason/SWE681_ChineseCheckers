@@ -225,7 +225,7 @@ function startGameMsgHandler() {
  * Handler for 'doneTurnMsg' - shows doneTurnButton
  */
 function doneTurnMsgHandler() {
-  console.log("Received Done Turn Msg");
+  console.log("Received Done Turn Msg, Is my Turn");
   playerTurn = true;
   selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
   alreadyMoved = false; // Already started moving, prevent moving of another ball
@@ -239,6 +239,13 @@ function doneTurnMsgHandler() {
     doneTurnButton.show();
     statusMsg.hide();
   }
+
+  var currBoardTemplate = getCurrentBoardTemplate();
+
+  console.log(currBoardTemplate);
+  socket.emit("updateBoardMsg", {username: username, turn: playerTurn, boardUpdate: currBoardTemplate }); 
+
+
 }
 
 /*
@@ -553,8 +560,11 @@ function repositionDoneTurnButton(){
 function doneTurnButtonListener() {
   if(alreadyMoved) // if a move was made send update else can't
   {
+    var currBoardTemplate = getCurrentBoardTemplate();
+
+    console.log(currBoardTemplate);
     playerTurn = false; // make it not clickable
-    socket.emit("doneTurnMsg", {room : room}); // send msg to room indicating user is done with turn
+    socket.emit("doneTurnMsg", {username: username, room : room, turn: playerTurn, boardUpdate: currBoardTemplate }); // send msg to room indicating user is done with turn
     doneTurnButton.hide(); // hide done turn button
     board[jStart][iStart].setSelected(false); // unselect hole
     statusMsg.show();
@@ -619,4 +629,16 @@ function windowResized() {
     drawJoinGameButton();
   }
 
+}
+
+function getCurrentBoardTemplate() {
+  var template = "";
+  for (var j = 0; j < TOTALROWS; j++) {
+    for (var i = 0; i < TOTALCOLS; i++) {
+      if(boardHoles[j][i]) {
+        template += board[j][i].status.rep;
+      }
+    }
+  }
+  return template;
 }

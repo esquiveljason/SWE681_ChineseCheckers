@@ -113,9 +113,17 @@ io.sockets.on('connection',
 
       socket.on('doneTurnMsg', function(data) {
         var sendToRoom = data.room;
+        mysqlpool.updateUserTurn(data.username, data.turn, function () {});
+        mysqlpool.updateUserBoard(data.username, data.boardUpdate, function () {});
+        logger.info(`Updating Board for ${data.username}`);
         socket.to(sendToRoom).emit('doneTurnMsg');
         logger.info("Sending doneTurnMsg to Room: " + sendToRoom);
       })
+      socket.on('updateBoardMsg', function(data) {
+        mysqlpool.updateUserTurn(data.username, data.turn, function () {});
+        mysqlpool.updateUserBoard(data.username, data.boardUpdate, function () {});
+        logger.info(`Updating Board for ${data.username}`);
+      });
       // Handle when user wants to start new game, need 2 users to start game
       // Should start game when second user is accepted
       socket.on('newGameMsg', function(data) {
@@ -214,6 +222,7 @@ function checkStillDisconnected(username) {
         mysqlpool.updateUserStatusNotInRoom(disconnectedUser.username, function() {});
         mysqlpool.updateUserSocketId(disconnectedUser.username, "", function() {});
         mysqlpool.incrementUserLosses(disconnectedUser.username, function () {});
+        mysqlpool.updateUserTurn(disconnectedUser.username, false, function () {});
 
         mysqlpool.getOtherUserInRoom(disconnectedUser.username, disconnectedUser.room, function(connectedUser, foundConnectedUser) {
           if(!foundConnectedUser) {
@@ -223,6 +232,7 @@ function checkStillDisconnected(username) {
             mysqlpool.updateUserStatusNotInRoom(connectedUser.username, function() {});
             mysqlpool.updateUserSocketId(connectedUser.username, "", function() {});
             mysqlpool.updateUserRoom(connectedUser.username, "", function() {}); // empty room for user not in game
+            mysqlpool.updateUserTurn(connectedUser.username, false, function () {});
 
             io.sockets.in(connectedUser.room).emit('defaultWinMsg'); //Send message to still connected User "You are winner"
           }
