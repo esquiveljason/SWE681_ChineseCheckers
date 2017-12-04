@@ -11,12 +11,12 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var routes = require('./routes/index');
 
-const mysqlpool = require('./mysqlpool');
+var mysqlpool = require('./mysqlpool');
 
-const logger = require('./logger');
-const morgan = require('morgan');
+var logger = require('./logger');
+var morgan = require('morgan');
 
-const port = 8000;
+var port = 8000;
 
 // Init App
 var app = express();
@@ -29,13 +29,13 @@ app.set('view engine', 'handlebars');
 // Logger
 app.use(morgan('dev', {
     skip: function (req, res) {
-        return res.statusCode < 400
+        return res.statusCode < 400;
     }, stream: process.stderr
 }));
 
 app.use(morgan('dev', {
     skip: function (req, res) {
-        return res.statusCode >= 400
+        return res.statusCode >= 400;
     }, stream: process.stdout
 }));
 
@@ -74,7 +74,7 @@ app.use(function(request, response, next) {
 
 app.use('/', routes);
 
-const options = {
+var options = {
   key: fs.readFileSync('ssl/priv.key'),
   cert: fs.readFileSync('ssl/cert.crt')
 };
@@ -82,9 +82,9 @@ const options = {
 // Start the Server
 var server = https.createServer(options, app);
 
-server.listen(port, (err) => {
+server.listen(port, function(err) {
   if (err) {
-    return console.log('something bad happened', err)
+    return console.log('something bad happened', err);
   }
 
   logger.info('Server is starting......');
@@ -118,7 +118,7 @@ io.sockets.on('connection',
         //logger.info(`Updating Board for ${data.username}`);
         socket.to(sendToRoom).emit('doneTurnMsg');
         logger.info("Sending doneTurnMsg to Room: " + sendToRoom);
-      })
+      });
       socket.on('updateBoardMsg', function(data) {
         mysqlpool.updateUserTurn(data.username, data.turn, function () {});
         mysqlpool.updateUserBoard(data.username, data.selectstatus, data.alreadymoved, data.istart, data.jstart, data.iend, data.jend, data.board, function () {});
@@ -137,7 +137,7 @@ io.sockets.on('connection',
           if(user.status === "DISCONNECTED") {
             logger.info(`Disconnected User ${data.username} trying to reconnect to previous game.`);
             socket.to(user.room).emit('otherUserReCntMsg');
-            socket.join(user.room, (err) => {
+            socket.join(user.room, function(err) {
               if (err) throw err;
             });
 
@@ -150,7 +150,7 @@ io.sockets.on('connection',
               istart : user.istart,
               jstart : user.jstart,
               iend : user.iend,
-              jend : user.jend, 
+              jend : user.jend,
               board: user.board});
 
           }
@@ -162,7 +162,7 @@ io.sockets.on('connection',
             if(room == null) {
               room = 'room'+roomNumber;
               logger.info("Making new Room: " + room);
-              socket.join(room, (err) => {
+              socket.join(room, function(err) {
                 if (err) throw err;
               });
               mysqlpool.updateUserRoom(username, room, function() {});
@@ -179,7 +179,7 @@ io.sockets.on('connection',
             // Start game
             else{
               logger.info("Room is waiting for Player 2: " + room);
-              socket.join(room, (err) => {
+              socket.join(room, function(err) {
                 if (err) throw err;
 
               });
@@ -231,7 +231,7 @@ io.sockets.on('connection',
         logger.info("We have disconnected client: " + socket.id);
         mysqlpool.getUserBySocketId(socket.id, function(disconnectedUser, foundUser) {
           if(foundUser){
-            io.sockets.in(disconnectedUser.room).emit("userDiscMsg")
+            io.sockets.in(disconnectedUser.room).emit("userDiscMsg");
             mysqlpool.updateUserStatusDisconnected(disconnectedUser.username, function() {});
             setTimeout(checkStillDisconnected, 60*1000, disconnectedUser.username);
           }

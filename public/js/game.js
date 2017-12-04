@@ -10,7 +10,7 @@ var gameOverMsg;    // Game over message
 var gameState;    // Indicates status of game waiting, active, finished
 var room;           // assigned room for this user
 
-const newBoardTemplate  = "rrrrrrrrrrooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobbbbbbbbbb";
+var newBoardTemplate  = "rrrrrrrrrrooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobbbbbbbbbb";
 
 var username;
 var usernameMsg;
@@ -228,7 +228,7 @@ function startGameMsgHandler() {
   repositionDoneTurnButton();
   repositionStatusMsg();
   if(playerTurn === Boolean.TRUE){
-    statusMsg.hide()
+    statusMsg.hide();
     doneTurnButton.show();
   } else {
     statusMsg.show();
@@ -544,16 +544,17 @@ function checkWon(){
       if(boardHoles[j][i]) {
         if(j < 4) { // check only top portion
           if(board[j][i].status.id == HoleStatusEnum.PLAYER1.id) {
-            count++
+            count++;
           }
         }
       }
     }
   }
-  if(count === 10)
+  if(count === 10) {
     return true;
-  else return
+  } else {
     return false;
+  }
 }
 // Function for sending to the socket
 function sendUpdateMsg() {
@@ -584,7 +585,7 @@ function sendUpdateBoardMsg(){
     jstart : jStart,
     iend : iEnd,
     jend : jEnd,
-    board: currBoardTemplate }
+    board: currBoardTemplate };
   socket.emit("updateBoardMsg", data );
 
 }

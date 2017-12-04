@@ -3,33 +3,33 @@ var path = require('path');
 var bcrypt = require('bcryptjs');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
-const { check, validationResult } = require('express-validator/check');
+var { check, validationResult } = require('express-validator/check');
 var router = express.Router();
 
 
-const mysqlpool = require('../mysqlpool');
-const logger = require('../logger');
+var mysqlpool = require('../mysqlpool');
+var logger = require('../logger');
 
 
 
 // Get Homepage
-router.get('/', checkAuthenticated, (request, response) => {
+router.get('/', checkAuthenticated, function (request, response) {
   //response.sendFile(path.join(__dirname, '/../public/login.html'));
   response.render('login');
 });
 
 
-router.get('/register', checkAuthenticated, (request, response) => {
+router.get('/register', checkAuthenticated, function (request, response) {
   //response.sendFile(path.join(__dirname,'/../public/register.html'));
   response.render('register');
 });
 
-router.get('/home', ensureAuthenticated, (request, response) => {
+router.get('/home', ensureAuthenticated, function (request, response) {
   //response.sendFile(path.join(__dirname, '/../public/home.html'));
   response.render('home');
 });
 
-router.get('/scores', ensureAuthenticated, (request, response) => {
+router.get('/scores', ensureAuthenticated, function(request, response) {
   // Get all user from database
   // Parse user for username, wins, losses
   // generate string with all users, wins losses
@@ -49,13 +49,13 @@ router.get('/scores', ensureAuthenticated, (request, response) => {
 
 });
 
-router.get('/logout', ensureAuthenticated, (request, response) => {
+router.get('/logout', ensureAuthenticated, function(request, response) {
   request.logout();
   request.flash('success_msg', 'You are logged out.');
   response.redirect("/");
 });
 
-router.post('/register_page', (request, response) => {
+router.post('/register_page', function(request, response) {
     //response.sendFile(path.join(__dirname, '/../public/game.html'));
     response.redirect('/register');
 });
@@ -74,9 +74,9 @@ passport.use( new LocalStrategy(
       bcrypt.compare(password, user.password, function(err, isMatch) {
           if(isMatch) {
             logger.info(user);
-            return done(null, user)
+            return done(null, user);
           } else {
-            return done(null, false, {message: "Invalid Username or Password. Please try again."})
+            return done(null, false, {message: "Invalid Username or Password. Please try again."});
           }
       });
     });
@@ -92,7 +92,7 @@ passport.deserializeUser(function(username, done) {
       done(null, user); //todo should be done(error,user)
     }
     else {
-      logger.info('could not find user by id')
+      logger.info('could not find user by id');
     }
   });
 });
@@ -115,14 +115,14 @@ router.post('/register', [
   check('password2')
     .custom((value, { req }) => value === req.body.password).withMessage("Must match Password")
 
-], (request, response) => {
+], function(request, response) {
 
   var firstname = request.body.firstname;
   var lastname  = request.body.lastname;
   var username  = request.body.username;
   var password  = request.body.password;
 
-  const errs = validationResult(request);
+  var errs = validationResult(request);
   if(!errs.isEmpty()) {
     console.log(errs.mapped());
     response.render('register', {
@@ -144,8 +144,8 @@ router.post('/register', [
 
 });
 
-router.get('*', (request, response) => {
-  response.status(404).send('Page not found!!!!!!!!!!!!!!!!11')
+router.get('*', function (request, response) {
+  response.status(404).send('Page not found!!!!!!!!!!!!!!!!11');
 });
 
 function errMsg(message) {

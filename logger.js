@@ -1,5 +1,5 @@
 var fs = require('fs');
-const logDir = 'log';
+var logDir = 'log';
 
 if(!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir);
@@ -7,9 +7,9 @@ if(!fs.existsSync(logDir)) {
 
 var winston = require('winston');
 
-const tsFormat = () => (new Date()).toLocaleString() ;
+var tsFormat = () => (new Date()).toLocaleString() ;
 
-const logger = new (winston.Logger)({
+var logger = new (winston.Logger)({
   level: 'info',
   transports: [
     new winston.transports.Console(
@@ -27,4 +27,4 @@ const logger = new (winston.Logger)({
   ]
 });
 
-module.exports = logger
+module.exports = logger;

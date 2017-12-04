@@ -1,7 +1,7 @@
 var mysql = require('mysql');
 var bcrypt = require('bcryptjs');
-const logger = require('./logger');
-const initBoard  = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
+var logger = require('./logger');
+var initBoard  = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
 
 
 require('console.table');
@@ -90,7 +90,7 @@ module.exports.listUsers = function() {
       connection.release();
       });
   });
-}
+};
 
 /*
  * Add user to database from registration page using firstname, lastname, username and password
@@ -99,7 +99,8 @@ module.exports.listUsers = function() {
 module.exports.addUser = function(firstname, lastname, username, password) {
   bcrypt.genSalt(10, function(err, salt) {
     bcrypt.hash(password, salt, function(err, hash) {
-      var winsInit = lossesInit = 0; // initialize wins losses to zero
+      var winsInit = 0;
+      var lossesInit = 0; // initialize wins losses to zero
       var statusInit = UserStatusEnum.NOTINROOM; //Initialize not in room
       var sql_stmt = "INSERT INTO users (firstname, lastname, username, password, wins, losses, status, room, socketid, turn, selectstatus, alreadymoved, istart, jstart, iend, jend, board) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
       var values = [firstname, lastname, username, hash, winsInit, lossesInit, statusInit, "", "", Boolean.FALSE, SelectStatusEnum.START, Boolean.FALSE, -1, -1, -1, -1, initBoard];
@@ -121,7 +122,7 @@ module.exports.addUser = function(firstname, lastname, username, password) {
       });
     });
   });
-}
+};
 /*
  * username - username entered by users
  * callback
@@ -155,7 +156,7 @@ module.exports.getUserByUsername = function(username, callback) {
       connection.release();
     });
   });
-}
+};
 /*
  * get user from db using socketid
  */
@@ -186,7 +187,7 @@ module.exports.getUserBySocketId = function(socketId, callback) {
       connection.release();
     });
   });
-}
+};
 
 /*
  */
@@ -217,7 +218,7 @@ module.exports.getOtherUserInRoom = function(username, room, callback) {
       connection.release();
     });
   });
-}
+};
 
 /*
  * Get all usernames
@@ -238,26 +239,26 @@ module.exports.getAllUsers = function(callback) {
       connection.release();
     });
   });
-}
+};
 
 /*
  * Update User Status to 'INROOM' for Username
  */
 module.exports.updateUserStatusInRoom = function(username) {
   updateUserStatus(username, UserStatusEnum.INROOM);
-}
+};
 /*
  * Update User Status to 'NOTINROOM' for Username
  */
 module.exports.updateUserStatusNotInRoom = function(username) {
   updateUserStatus(username, UserStatusEnum.NOTINROOM);
-}
+};
 /*
  * Update User Status to 'DISCONNECTED' for Username
  */
 module.exports.updateUserStatusDisconnected = function(username) {
   updateUserStatus(username, UserStatusEnum.DISCONNECTED);
-}
+};
 
 /*
  * Handles sql query to update status for user
@@ -301,7 +302,7 @@ module.exports.incrementUserWins = function(username) {
       connection.release();
     });
   });
-}
+};
 
 /*
  * Handles sql query to increment wins for loser
@@ -323,7 +324,7 @@ module.exports.incrementUserLosses = function(username) {
       connection.release();
     });
   });
-}
+};
 
 /*
  * Handles sql query update user socketid
@@ -345,7 +346,7 @@ module.exports.updateUserSocketId = function(username, socketId) {
       connection.release();
     });
   });
-}
+};
 
 /*
  * Handles sql query update user room
@@ -367,7 +368,7 @@ module.exports.updateUserRoom = function(username, room) {
       connection.release();
     });
   });
-}
+};
 
 /*
  * Handles sql query update user turn
@@ -389,7 +390,7 @@ module.exports.updateUserTurn = function(username, turn) {
       connection.release();
     });
   });
-}
+};
 
 /*
  * Handles sql query update user board
@@ -417,4 +418,4 @@ module.exports.updateUserBoard = function(username, selectstatus, alreadymoved, 
       connection.release();
     });
   });
-}
+};
