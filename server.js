@@ -114,8 +114,6 @@ io.sockets.on('connection',
       socket.on('doneTurnMsg', function(data) {
         var sendToRoom = data.room;
         mysqlpool.updateUserTurn(data.username, data.turn, function () {});
-        mysqlpool.updateUserBoard(data.username, data.boardUpdate, function () {});
-        logger.info(`Updating Board for ${data.username}`);
         socket.to(sendToRoom).emit('doneTurnMsg');
         logger.info("Sending doneTurnMsg to Room: " + sendToRoom);
       })
@@ -127,53 +125,69 @@ io.sockets.on('connection',
       // Handle when user wants to start new game, need 2 users to start game
       // Should start game when second user is accepted
       socket.on('newGameMsg', function(data) {
-        logger.info("Received New Game Message from client: " + socket.id);
-        var username = data.username;
-        var socketId = socket.id;
+        logger.info(`Received New Game Message from ${data.username} client: ${socket.id}`);
 
-        mysqlpool.updateUserSocketId(username, socketId, function() {});
-        mysqlpool.updateUserStatusInRoom(username, function() {});
+        mysqlpool.getUserByUsername(data.username, function(user, foundUser) {
 
-        // if no room is available make room and join, send back to user
-        if(room == null) {
-          room = 'room'+roomNumber;
-          logger.info("Making new Room: " + room);
-          socket.join(room, (err) => {
-            if (err) throw err;
+          mysqlpool.updateUserSocketId(data.username, socket.id, function() {});
+          mysqlpool.updateUserStatusInRoom(data.username, function() {});
 
-          });
-          mysqlpool.updateUserRoom(username, room, function() {});
-          logger.info("Sending Room to client: " + socket.id);
+          if(user.status === "DISCONNECTED") {
+            logger.info(`Disconnected User ${data.username} trying to reconnect to previous game.`);
+            socket.to(user.room).emit('otherUserReCntMsg');
+            socket.join(user.room, (err) => {
+              if (err) throw err;
+            });
+            var playerTurn = user.turn;
+            logger.info(`Sending Reconnect User Message : ${user.username} Room : ${user.room} Turn : ${user.turn} jjj`);
+            socket.emit('userRecntMsg', {room: user.room, turn: playerTurn, board: user.board});
 
-          var playerTurn = true;
+          }
+          else {
+            var username = user.username;
+            var socketId = socket.id;
 
-          mysqlpool.updateUserTurn(username, playerTurn, function() {});
+            // if no room is available make room and join, send back to user
+            if(room == null) {
+              room = 'room'+roomNumber;
+              logger.info("Making new Room: " + room);
+              socket.join(room, (err) => {
+                if (err) throw err;
+              });
+              mysqlpool.updateUserRoom(username, room, function() {});
+              logger.info("Sending Room to client: " + socket.id);
 
-          socket.emit('roomMsg', {room: room, playerTurn: playerTurn});
+              var playerTurn = 1;
 
-        }
-        // if there is a room available to join, send back to user, clear room for next user
-        // Start game
-        else{
-          logger.info("Room is waiting for Player 2: " + room);
-          socket.join(room, (err) => {
-            if (err) throw err;
+              mysqlpool.updateUserTurn(username, playerTurn, function() {});
 
-          });
-          mysqlpool.updateUserRoom(username, room, function() {});
-          logger.info("Sending Room to client: " + socket.id);
+              socket.emit('roomMsg', {room: room, playerTurn: playerTurn});
 
-          var playerTurn = false;
-          mysqlpool.updateUserTurn(username, playerTurn, function() {});
+            }
+            // if there is a room available to join, send back to user, clear room for next user
+            // Start game
+            else{
+              logger.info("Room is waiting for Player 2: " + room);
+              socket.join(room, (err) => {
+                if (err) throw err;
 
-          socket.emit('roomMsg', {room: room, playerTurn: playerTurn});
-          // Send 'startGameMsg' to all users in room
-          io.sockets.in(room).emit('startGameMsg');
-          console.log("Starting game in Room : " + room);
+              });
+              mysqlpool.updateUserRoom(username, room, function() {});
+              logger.info("Sending Room to client: " + socket.id);
 
-          roomNumber++;
-          room = null;
-        }
+              var playerTurn = 0;
+              mysqlpool.updateUserTurn(username, playerTurn, function() {});
+
+              socket.emit('roomMsg', {room: room, playerTurn: playerTurn});
+              // Send 'startGameMsg' to all users in room
+              io.sockets.in(room).emit('startGameMsg');
+              console.log("Starting game in Room : " + room);
+
+              roomNumber++;
+              room = null;
+            }
+          }
+        });
       });
 
       // Game over message
@@ -206,8 +220,9 @@ io.sockets.on('connection',
         logger.info("We have disconnected client: " + socket.id);
         mysqlpool.getUserBySocketId(socket.id, function(disconnectedUser, foundUser) {
           if(foundUser){
+            io.sockets.in(disconnectedUser.room).emit("userDiscMsg")
             mysqlpool.updateUserStatusDisconnected(disconnectedUser.username, function() {});
-            setTimeout(checkStillDisconnected, 30*1000, disconnectedUser.username);
+            setTimeout(checkStillDisconnected, 60*1000, disconnectedUser.username);
           }
         });
       });

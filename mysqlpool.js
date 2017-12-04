@@ -12,6 +12,11 @@ var UserStatusEnum = {
   DISCONNECTED : "DISCONNECTED"
 };
 
+var TurnEnum = {
+  FALSE : 0,
+  TRUE : 1
+};
+
 // Init mysql Connection
 var mysqlpool = mysql.createPool({
   connectionLimit : 20,
@@ -41,7 +46,7 @@ mysqlpool.getConnection(function(err, connection){
             + 'status VARCHAR(30),'
             + 'room VARCHAR(30),'
             + 'socketid VARCHAR(30),'
-            + 'turn BIT,'
+            + 'turn INT NOT NULL,'
             + 'board CHAR(121),'
             + 'PRIMARY KEY(id)'
             +  ')',
@@ -87,7 +92,7 @@ module.exports.addUser = function(firstname, lastname, username, password) {
       var winsInit = lossesInit = 0; // initialize wins losses to zero
       var statusInit = UserStatusEnum.NOTINROOM; //Initialize not in room
       var sql_stmt = "INSERT INTO users (firstname, lastname, username, password, wins, losses, status, room, socketid, turn, board) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
-      var values = [firstname, lastname, username, hash, winsInit, lossesInit, statusInit, "", "", false, initBoard];
+      var values = [firstname, lastname, username, hash, winsInit, lossesInit, statusInit, "", "", TurnEnum.FALSE, initBoard];
 
       sql_stmt = mysql.format(sql_stmt, values);
 
@@ -117,7 +122,7 @@ module.exports.getUserByUsername = function(username, callback) {
   var sql_stmt = "SELECT * FROM users WHERE username = ?";
   var values = [username];
   var user;
-
+  logger.info(`getUserByUsername : Username - ${username}`);
   sql_stmt = mysql.format(sql_stmt, values);
 
   mysqlpool.getConnection(function(err, connection) {
@@ -377,7 +382,7 @@ module.exports.updateUserTurn = function(username, turn) {
 }
 
 /*
- * Handles sql query update user turn
+ * Handles sql query update user board
  */
 module.exports.updateUserBoard = function(username, board) {
   var sql_stmt = 'UPDATE users SET board = ? WHERE username = ?';

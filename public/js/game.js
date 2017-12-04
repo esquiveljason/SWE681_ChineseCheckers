@@ -6,20 +6,27 @@ var joinGameButton; // Join Game button
 var doneTurnButton; // Button to end turn
 var waitingMsg;     // Waiting Msg to display
 var statusMsg;      // "Other player turn" msg
-var gameOverMsg     // Game over message
+var gameOverMsg;    // Game over message
 var gameState;    // Indicates status of game waiting, active, finished
 var room;           // assigned room for this user
 
-const boardTemplate  = "rrrrrrrrrrooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobbbbbbbbbb";
+const newBoardTemplate  = "rrrrrrrrrrooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobbbbbbbbbb";
 
 var username;
+var usernameMsg;
 
 var GameStateEnum = {
   GAMEWAIT : 200,
   GAMEJOINED : 201,
   GAMEACTIVE : 202,
-  GAMEFINISHED : 203
-}
+  GAMEDISCONNECTED: 203,
+  GAMEFINISHED : 204
+};
+
+var TurnEnum = {
+  FALSE : 0,
+  TRUE : 1
+};
 
 var TOTALROWS = 17; // ROWS for board
 var TOTALCOLS = 25; // COLS for board
@@ -77,7 +84,7 @@ function setup() {
   frameRate(30); // 30 fps
 
   // setupBoard
-  setupBoard();
+  setupBoard(newBoardTemplate);
 
   // instantiate waiting msg
   drawWaitingMsg();
@@ -96,13 +103,11 @@ function setup() {
 
   //TESTING
   username = document.getElementById('user').name;
-  gameOverMsg = createElement('p',username);
-  gameOverMsg.style("color", "white");
-  gameOverMsg.style("font-size", "24px");
-  gameOverMsg.position(cnv.x + 650 , cnv.y + 15);
+  drawUsernameMsg();
+
 }
 // Setup board
-function setupBoard() {
+function setupBoard(template) {
   var b_c = 0;
   // instantiate empty 2d array for board
   board = make2DArray(boardHoles.length, boardHoles[0].length);
@@ -111,9 +116,9 @@ function setupBoard() {
     for (var i = 0; i < TOTALCOLS; i++) {
       if(boardHoles[j][i]) {
         //
-        if(boardTemplate[b_c] === "b") { // Player1
+        if(template[b_c] === "b") { // Player1
           board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER1);
-        } else if(boardTemplate[b_c] === "r") { // Player2
+        } else if(template[b_c] === "r") { // Player2
           board[j][i] = new Hole(i, j, HoleStatusEnum.PLAYER2);
         } else {
           board[j][i] = new Hole(i, j, HoleStatusEnum.EMPTY);
@@ -130,7 +135,7 @@ function joinGameButtonListener() {
   if(gameState === GameStateEnum.GAMEFINISHED)
     gameOverMsg.hide();
   // Initialize variables
-  playerTurn = false;
+  playerTurn = TurnEnum.FALSE;
   selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
   alreadyMoved = false; // Already started moving, prevent moving of another ball
   iStart = -1;  // Postions of selected ball
@@ -166,6 +171,12 @@ function setUpSocket() {
   socket.on('gameOverMsg', gameOverMsgHandler);
   // Automatic win message
   socket.on('defaultWinMsg', defaultWinMsgHandler);
+  // User has disconnected Msg
+  socket.on('userDiscMsg', userDiscMsgHandler);
+  // other User has reconnected msg
+  socket.on('otherUserReCntMsg', otherUserReCntMsgHandler);
+  // user reconnected Msg
+  socket.on('userRecntMsg', userReCntMsgHandler);
   // Send out message to try to start new game, this user is ready to play
   socket.emit('newGameMsg', {username: username});
   console.log("Emitting new game");
@@ -183,6 +194,10 @@ function updateMsgHandler(updateBoardData) {
   console.log("Update End   (i,j) : (" + updateBoardData.iEnd+","+ updateBoardData.jEnd+")" );
   board[updateBoardData.jStart][updateBoardData.iStart].status = HoleStatusEnum.EMPTY;
   board[updateBoardData.jEnd][updateBoardData.iEnd].status = HoleStatusEnum.PLAYER2;
+
+  var currBoardTemplate = getCurrentBoardTemplate();
+
+  socket.emit("updateBoardMsg", {username: username, turn: playerTurn, boardUpdate: currBoardTemplate });
 }
 
 /*
@@ -212,7 +227,9 @@ function startGameMsgHandler() {
   // Remove waiting msg
   waitingMsg.hide();
 
-  if(playerTurn){
+  repositionDoneTurnButton();
+  repositionStatusMsg();
+  if(playerTurn === TurnEnum.TRUE){
     statusMsg.hide()
     doneTurnButton.show();
   } else {
@@ -226,7 +243,7 @@ function startGameMsgHandler() {
  */
 function doneTurnMsgHandler() {
   console.log("Received Done Turn Msg, Is my Turn");
-  playerTurn = true;
+  playerTurn = TurnEnum.TRUE;
   selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
   alreadyMoved = false; // Already started moving, prevent moving of another ball
 
@@ -239,13 +256,6 @@ function doneTurnMsgHandler() {
     doneTurnButton.show();
     statusMsg.hide();
   }
-
-  var currBoardTemplate = getCurrentBoardTemplate();
-
-  console.log(currBoardTemplate);
-  socket.emit("updateBoardMsg", {username: username, turn: playerTurn, boardUpdate: currBoardTemplate }); 
-
-
 }
 
 /*
@@ -274,15 +284,63 @@ function defaultWinMsgHandler() {
   console.log("Winner!!!!!!!!!!!!!!!!!!!!!!!!!!!11");
   gameState = GameStateEnum.GAMEFINISHED;
 
-  // hide done button and status msg
-  doneTurnButton.hide();
-  statusMsg.hide();
+
   repositionJoinGameButton(); // reposition just in case
   joinGameButton.show();
 
   // call draw game over msg
   drawGameOverMsg(true); // false for loser
 }
+/*
+ * Handler for 'userDiscMsg'
+ */
+function userDiscMsgHandler() {
+  console.log("User Disconnected Message Handler");
+  // hide done button and status msg
+  doneTurnButton.hide();
+  statusMsg.hide();
+  gameState = GameStateEnum.DISCONNECTED;
+}
+/*
+ * Handler for 'userDiscMsg'
+ */
+function otherUserReCntMsgHandler() {
+  console.log("User Reconnected Message Handler");
+  if(playerTurn === TurnEnum.TRUE) {
+    doneTurnButton.show();
+  } else {
+    statusMsg.show();
+  }
+  gameState = GameStateEnum.GAMEACTIVE;
+}
+/*
+ * Handler for 'userDiscMsg'
+ */
+function userReCntMsgHandler(data) {
+  console.log("Reconnecting to previous game");
+  console.log(`Room : ${data.room} playerTurn : ${data.turn}`);
+  room = data.room;
+  playerTurn = data.turn;
+  gameState = GameStateEnum.GAMEACTIVE;
+  setupBoard(data.board);
+  selectStatus = SelectStatusEnum.START;
+  alreadyMoved = false;
+  iStart = -1;  // Postions of selected ball
+  jStart = -1;
+  iEnd = -1;    // Positions of selected slot for ball to move to
+  jEnd = -1;
+  waitingMsg.hide();
+
+  if(playerTurn === TurnEnum.TRUE) {
+    doneTurnButton.show();
+    statusMsg.hide();
+  } else {
+    doneTurnButton.hide();
+    statusMsg.show();
+  }
+
+}
+
 /*
  * p5 function called at framerate set to 30 fps in setUpSocket
  * draws that status of each hole
@@ -310,7 +368,7 @@ function mousePressed() {
   var jSelected = -1;
   // 1) Finds hole that was pressed
   if(gameState === GameStateEnum.GAMEACTIVE) {
-    if(playerTurn) { // don't allow click if not player turn
+    if(playerTurn === TurnEnum.TRUE) { // don't allow click if not player turn
       loop:
       for (var j = 0; j < 17; j++) {
         for (var i = 0; i < 25; i++) {
@@ -502,6 +560,9 @@ function sendUpdateMsg() {
   // Send that object to the socket
   socket.emit('updateMsg', updateData);
   console.log("Sending update to : " + updateData.room);
+
+  var currBoardTemplate = getCurrentBoardTemplate();
+  socket.emit("updateBoardMsg", {username: username, turn: playerTurn, boardUpdate: currBoardTemplate });
 }
 
 /*
@@ -560,11 +621,8 @@ function repositionDoneTurnButton(){
 function doneTurnButtonListener() {
   if(alreadyMoved) // if a move was made send update else can't
   {
-    var currBoardTemplate = getCurrentBoardTemplate();
-
-    console.log(currBoardTemplate);
-    playerTurn = false; // make it not clickable
-    socket.emit("doneTurnMsg", {username: username, room : room, turn: playerTurn, boardUpdate: currBoardTemplate }); // send msg to room indicating user is done with turn
+    playerTurn = TurnEnum.FALSE; // make it not clickable
+    socket.emit("doneTurnMsg", {username: username, room : room, turn: playerTurn }); // send msg to room indicating user is done with turn
     doneTurnButton.hide(); // hide done turn button
     board[jStart][iStart].setSelected(false); // unselect hole
     statusMsg.show();
@@ -607,23 +665,29 @@ function drawGameOverMsg(winner) {
 function repositionGameOverMsg() {
   gameOverMsg.position(cnv.x + 525 , cnv.y + 100);
 }
+function drawUsernameMsg(winner) {
+  usernameMsg = createElement('p',username);
+  usernameMsg.style("color", "white");
+  usernameMsg.style("font-size", "24px");
+  usernameMsg.position(cnv.x + 650 , cnv.y + 15);
+}
+function repositionUsernameMsg() {
+  usernameMsg.position(cnv.x + 650 , cnv.y + 15);
+}
 
 /*
  * p5 function to resize the canvas when window is resized
  */
 function windowResized() {
   centerCanvas();
+  repositionUsernameMsg();
   if( gameState === GameStateEnum.GAMEWAIT) {
     drawJoinGameButton();
-  }
-  else if (gameState === GameStateEnum.GAMEJOINED) {
+  } else if (gameState === GameStateEnum.GAMEJOINED) {
     repositionWaitingMsg();
   } else if(gameState === GameStateEnum.GAMEACTIVE) {
     repositionDoneTurnButton();
-    if(!playerTurn) {
-      doneTurnButton.hide();
-      repositionStatusMsg();
-    }
+    repositionStatusMsg();
   } else if(gameState === GameStateEnum.GAMEFINISHED) {
     repositionGameOverMsg();
     drawJoinGameButton();

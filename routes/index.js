@@ -69,13 +69,6 @@ passport.use( new LocalStrategy(
       if(!foundUser) {
         return done(null, false, {message : "Invalid Username or Password. Please try again."});
       }
-      logger.info(user.id);
-      logger.info(user.firstname);
-      logger.info(user.lastname);
-      logger.info(user.username);
-      logger.info(user.password);
-      logger.info(user.wins);
-      logger.info(user.losses);
 
       // compare password with database password
       bcrypt.compare(password, user.password, function(err, isMatch) {
