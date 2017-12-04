@@ -23,7 +23,7 @@ var GameStateEnum = {
   GAMEFINISHED : 204
 };
 
-var TurnEnum = {
+var Boolean = {
   FALSE : 0,
   TRUE : 1
 };
@@ -135,9 +135,9 @@ function joinGameButtonListener() {
   if(gameState === GameStateEnum.GAMEFINISHED)
     gameOverMsg.hide();
   // Initialize variables
-  playerTurn = TurnEnum.FALSE;
+  playerTurn = Boolean.FALSE;
   selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
-  alreadyMoved = false; // Already started moving, prevent moving of another ball
+  alreadyMoved = Boolean.FALSE; // Already started moving, prevent moving of another ball
   iStart = -1;  // Postions of selected ball
   jStart = -1;
   iEnd = -1;    // Positions of selected slot for ball to move to
@@ -195,9 +195,7 @@ function updateMsgHandler(updateBoardData) {
   board[updateBoardData.jStart][updateBoardData.iStart].status = HoleStatusEnum.EMPTY;
   board[updateBoardData.jEnd][updateBoardData.iEnd].status = HoleStatusEnum.PLAYER2;
 
-  var currBoardTemplate = getCurrentBoardTemplate();
-
-  socket.emit("updateBoardMsg", {username: username, turn: playerTurn, boardUpdate: currBoardTemplate });
+  sendUpdateBoardMsg();
 }
 
 /*
@@ -229,7 +227,7 @@ function startGameMsgHandler() {
 
   repositionDoneTurnButton();
   repositionStatusMsg();
-  if(playerTurn === TurnEnum.TRUE){
+  if(playerTurn === Boolean.TRUE){
     statusMsg.hide()
     doneTurnButton.show();
   } else {
@@ -243,9 +241,9 @@ function startGameMsgHandler() {
  */
 function doneTurnMsgHandler() {
   console.log("Received Done Turn Msg, Is my Turn");
-  playerTurn = TurnEnum.TRUE;
+  playerTurn = Boolean.TRUE;
   selectStatus = SelectStatusEnum.START; // toggle to switch between start and finish
-  alreadyMoved = false; // Already started moving, prevent moving of another ball
+  alreadyMoved = Boolean.FALSE; // Already started moving, prevent moving of another ball
 
   iStart = -1;  // Postions of selected ball
   jStart = -1;
@@ -256,6 +254,7 @@ function doneTurnMsgHandler() {
     doneTurnButton.show();
     statusMsg.hide();
   }
+  sendUpdateBoardMsg();
 }
 
 /*
@@ -306,7 +305,7 @@ function userDiscMsgHandler() {
  */
 function otherUserReCntMsgHandler() {
   console.log("User Reconnected Message Handler");
-  if(playerTurn === TurnEnum.TRUE) {
+  if(playerTurn === Boolean.TRUE) {
     doneTurnButton.show();
   } else {
     statusMsg.show();
@@ -318,22 +317,31 @@ function otherUserReCntMsgHandler() {
  */
 function userReCntMsgHandler(data) {
   console.log("Reconnecting to previous game");
-  console.log(`Room : ${data.room} playerTurn : ${data.turn}`);
+  console.log(`Room : ${data.room} playerTurn : ${data.turn} selectStatus : ${data.selectstatus} alreadyMoved : ${data.alreadymoved}`);
+  console.log(`iStart : ${data.istart} jStart : ${data.jstart} iEnd : ${data.iend} jEnd : ${data.jend}`);
   room = data.room;
   playerTurn = data.turn;
   gameState = GameStateEnum.GAMEACTIVE;
   setupBoard(data.board);
-  selectStatus = SelectStatusEnum.START;
-  alreadyMoved = false;
-  iStart = -1;  // Postions of selected ball
-  jStart = -1;
-  iEnd = -1;    // Positions of selected slot for ball to move to
-  jEnd = -1;
+  selectStatus = data.selectstatus;//SelectStatusEnum.START;
+  alreadyMoved = data.alreadymoved;//Boolean.FALSE;
+  iStart = data.istart;//-1;  // Postions of selected ball
+  jStart = data.jstart;//-1;
+  iEnd = data.iend;//-1;    // Positions of selected slot for ball to move to
+  jEnd = data.jend;//-1;
   waitingMsg.hide();
 
-  if(playerTurn === TurnEnum.TRUE) {
+  if(playerTurn === Boolean.TRUE) {
     doneTurnButton.show();
     statusMsg.hide();
+    if(alreadyMoved === Boolean.TRUE) {
+      if(selectStatus === SelectStatusEnum.END){
+
+        jStart = jEnd;
+        iStart = iEnd;
+        board[jStart][iStart].setSelected(true);
+      }
+    }
   } else {
     doneTurnButton.hide();
     statusMsg.show();
@@ -368,7 +376,7 @@ function mousePressed() {
   var jSelected = -1;
   // 1) Finds hole that was pressed
   if(gameState === GameStateEnum.GAMEACTIVE) {
-    if(playerTurn === TurnEnum.TRUE) { // don't allow click if not player turn
+    if(playerTurn === Boolean.TRUE) { // don't allow click if not player turn
       loop:
       for (var j = 0; j < 17; j++) {
         for (var i = 0; i < 25; i++) {
@@ -387,7 +395,7 @@ function mousePressed() {
     {
       //2) Checks if hole pressed is player1(current) hole and previous ball hasn't already moved
       //    Set iStart, jStart, setSelected(true) and status to look for destination
-      if(board[jSelected][iSelected].status.id === HoleStatusEnum.PLAYER1.id && !alreadyMoved)
+      if(board[jSelected][iSelected].status.id === HoleStatusEnum.PLAYER1.id &&  (alreadyMoved === Boolean.FALSE))
       {
         if(iStart > 0 && jStart > 0){ // we've already selected a player1 ball previously
           board[jStart][iStart].setSelected(false); // un selected previous ball
@@ -412,10 +420,11 @@ function mousePressed() {
           board[jEnd][iEnd].status = HoleStatusEnum.PLAYER1;
           board[jStart][iStart].setSelected(false);
           board[jEnd][iEnd].setSelected(true);
+          alreadyMoved = Boolean.TRUE;
           sendUpdateMsg();
           jStart = jEnd;
           iStart = iEnd;
-          alreadyMoved = true;
+
           if(checkWon()){
             gameOver(true); // true for won game
           }
@@ -453,7 +462,7 @@ function gameOver(won) {
  */
 function validMove() {
   if(board[jEnd][iEnd].status.id === HoleStatusEnum.EMPTY.id) { // make sure destination is empty
-    if(!alreadyMoved) { // can only jump length 1 once, length 2 over other ball multiple times
+    if(alreadyMoved === Boolean.FALSE) { // can only jump length 1 once, length 2 over other ball multiple times
       if(iStart-1 === iEnd) {
         if(jStart-1 === jEnd){
           return true;           // TOP LEFT JUMP
@@ -561,8 +570,23 @@ function sendUpdateMsg() {
   socket.emit('updateMsg', updateData);
   console.log("Sending update to : " + updateData.room);
 
+  sendUpdateBoardMsg();
+}
+
+function sendUpdateBoardMsg(){
   var currBoardTemplate = getCurrentBoardTemplate();
-  socket.emit("updateBoardMsg", {username: username, turn: playerTurn, boardUpdate: currBoardTemplate });
+  var data = {
+    username: username,
+    turn: playerTurn,
+    selectstatus : selectStatus,
+    alreadymoved : alreadyMoved,
+    istart : iStart,
+    jstart : jStart,
+    iend : iEnd,
+    jend : jEnd,
+    board: currBoardTemplate }
+  socket.emit("updateBoardMsg", data );
+
 }
 
 /*
@@ -619,10 +643,14 @@ function repositionDoneTurnButton(){
 
 // Listener when done button is pressed
 function doneTurnButtonListener() {
-  if(alreadyMoved) // if a move was made send update else can't
+  if(alreadyMoved === Boolean.TRUE) // if a move was made send update else can't
   {
-    playerTurn = TurnEnum.FALSE; // make it not clickable
+    var currBoardTemplate = getCurrentBoardTemplate();
+    console.log(currBoardTemplate);
+    playerTurn = Boolean.FALSE; // make it not clickable
     socket.emit("doneTurnMsg", {username: username, room : room, turn: playerTurn }); // send msg to room indicating user is done with turn
+    sendUpdateBoardMsg();
+
     doneTurnButton.hide(); // hide done turn button
     board[jStart][iStart].setSelected(false); // unselect hole
     statusMsg.show();

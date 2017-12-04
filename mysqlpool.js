@@ -12,10 +12,14 @@ var UserStatusEnum = {
   DISCONNECTED : "DISCONNECTED"
 };
 
-var TurnEnum = {
+var Boolean = {
   FALSE : 0,
   TRUE : 1
 };
+var SelectStatusEnum = {   // flags to ndicates wether start ball has been selected
+   START: 101,
+   END: 102,
+ };
 
 // Init mysql Connection
 var mysqlpool = mysql.createPool({
@@ -47,6 +51,12 @@ mysqlpool.getConnection(function(err, connection){
             + 'room VARCHAR(30),'
             + 'socketid VARCHAR(30),'
             + 'turn INT NOT NULL,'
+            + 'selectstatus INT NOT NULL,'
+            + 'alreadymoved INT NOT NULL,'
+            + 'istart INT NOT NULL,'
+            + 'jstart INT NOT NULL,'
+            + 'iend INT NOT NULL,'
+            + 'jend INT NOT NULL,'
             + 'board CHAR(121),'
             + 'PRIMARY KEY(id)'
             +  ')',
@@ -91,8 +101,8 @@ module.exports.addUser = function(firstname, lastname, username, password) {
     bcrypt.hash(password, salt, function(err, hash) {
       var winsInit = lossesInit = 0; // initialize wins losses to zero
       var statusInit = UserStatusEnum.NOTINROOM; //Initialize not in room
-      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password, wins, losses, status, room, socketid, turn, board) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
-      var values = [firstname, lastname, username, hash, winsInit, lossesInit, statusInit, "", "", TurnEnum.FALSE, initBoard];
+      var sql_stmt = "INSERT INTO users (firstname, lastname, username, password, wins, losses, status, room, socketid, turn, selectstatus, alreadymoved, istart, jstart, iend, jend, board) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+      var values = [firstname, lastname, username, hash, winsInit, lossesInit, statusInit, "", "", Boolean.FALSE, SelectStatusEnum.START, Boolean.FALSE, -1, -1, -1, -1, initBoard];
 
       sql_stmt = mysql.format(sql_stmt, values);
 
@@ -383,10 +393,16 @@ module.exports.updateUserTurn = function(username, turn) {
 
 /*
  * Handles sql query update user board
+ selectstatus INT NOT NULL,'
+ + 'alreadymoved INT NOT NULL,'
+ + 'istart INT NOT NULL,'
+ + 'jstart INT NOT NULL,'
+ + 'iend INT NOT NULL,'
+ + 'jend INT NOT NULL,'
  */
-module.exports.updateUserBoard = function(username, board) {
-  var sql_stmt = 'UPDATE users SET board = ? WHERE username = ?';
-  var values = [board, username];
+module.exports.updateUserBoard = function(username, selectstatus, alreadymoved, istart, jstart, iend, jend, board) {
+  var sql_stmt = 'UPDATE users SET board = ?, selectstatus = ?, alreadymoved = ?, istart = ?, jstart = ?, iend = ?, jend = ? WHERE username = ?';
+  var values = [board, selectstatus, alreadymoved, istart, jstart, iend, jend, username];
 
   sql_stmt = mysql.format(sql_stmt, values);
 

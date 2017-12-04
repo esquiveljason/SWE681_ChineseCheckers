@@ -114,12 +114,14 @@ io.sockets.on('connection',
       socket.on('doneTurnMsg', function(data) {
         var sendToRoom = data.room;
         mysqlpool.updateUserTurn(data.username, data.turn, function () {});
+        //mysqlpool.updateUserBoard(data.username, data.boardUpdate, function () {});
+        //logger.info(`Updating Board for ${data.username}`);
         socket.to(sendToRoom).emit('doneTurnMsg');
         logger.info("Sending doneTurnMsg to Room: " + sendToRoom);
       })
       socket.on('updateBoardMsg', function(data) {
         mysqlpool.updateUserTurn(data.username, data.turn, function () {});
-        mysqlpool.updateUserBoard(data.username, data.boardUpdate, function () {});
+        mysqlpool.updateUserBoard(data.username, data.selectstatus, data.alreadymoved, data.istart, data.jstart, data.iend, data.jend, data.board, function () {});
         logger.info(`Updating Board for ${data.username}`);
       });
       // Handle when user wants to start new game, need 2 users to start game
@@ -138,9 +140,18 @@ io.sockets.on('connection',
             socket.join(user.room, (err) => {
               if (err) throw err;
             });
-            var playerTurn = user.turn;
+
             logger.info(`Sending Reconnect User Message : ${user.username} Room : ${user.room} Turn : ${user.turn} jjj`);
-            socket.emit('userRecntMsg', {room: user.room, turn: playerTurn, board: user.board});
+            socket.emit('userRecntMsg',
+            { room: user.room,
+              turn: user.turn,
+              selectstatus : user.selectstatus,
+              alreadymoved : user.alreadymoved,
+              istart : user.istart,
+              jstart : user.jstart,
+              iend : user.iend,
+              jend : user.jend, 
+              board: user.board});
 
           }
           else {
