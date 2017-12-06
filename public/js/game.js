@@ -10,6 +10,7 @@ var statusMsg;      // "Other player turn" msg
 var gameOverMsg;    // Game over message
 var gameState;    // Indicates status of game waiting, active, finished
 var room;           // assigned room for this user
+var discMsg;      // other user has disconnected msg
 
 var newBoardTemplate  = "rrrrrrrrrrooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooobbbbbbbbbb";
 
@@ -93,10 +94,13 @@ function setup() {
   drawStatusMsg();
   // instantiate done button
   drawDoneTurnButton();
+  // instantiate other user disconnected Message
+  drawDisconnectionMsg();
 
   waitingMsg.hide();
   statusMsg.hide();
   doneTurnButton.hide();
+  discMsg.hide();
 
   // Draw Button to join game and start Socket
   drawJoinGameButton();
@@ -238,6 +242,7 @@ function startGameMsgHandler() {
     statusMsg.show();
     doneTurnButton.hide();
   }
+  sendUpdateBoardMsg();
 }
 
 /*
@@ -286,7 +291,7 @@ function gameOverMsgHandler() {
 function defaultWinMsgHandler() {
   console.log("Winner!!!!!!!!!!!!!!!!!!!!!!!!!!!11");
   gameState = GameStateEnum.GAMEFINISHED;
-
+  discMsg.hide();
 
   repositionJoinGameButton(); // reposition just in case
   joinGameButton.show();
@@ -302,6 +307,7 @@ function userDiscMsgHandler() {
   // hide done button and status msg
   doneTurnButton.hide();
   statusMsg.hide();
+  discMsg.show();
   gameState = GameStateEnum.DISCONNECTED;
 }
 /*
@@ -309,6 +315,7 @@ function userDiscMsgHandler() {
  */
 function otherUserReCntMsgHandler() {
   console.log("User Reconnected Message Handler");
+  discMsg.hide();
   if(playerTurn === Boolean.TRUE) {
     doneTurnButton.show();
   } else {
@@ -682,6 +689,17 @@ function repositionStatusMsg() {
   statusMsg.position(cnv.x + 525 , cnv.y + 100);
 }
 
+
+function drawDisconnectionMsg() {
+  discMsg = createElement('p',"Other Player Disconnected");
+  discMsg.style("color", "white");
+  discMsg.style("font-size", "24px");
+  discMsg.position(cnv.x + 515 , cnv.y + 100);
+}
+function repositionDisconnectionMsg() {
+  discMsg.position(cnv.x + 515 , cnv.y + 100);
+}
+
 function drawGameOverMsg(winner) {
   var msg;
   if(winner)
@@ -721,6 +739,7 @@ function windowResized() {
   } else if(gameState === GameStateEnum.GAMEACTIVE) {
     repositionDoneTurnButton();
     repositionStatusMsg();
+    repositionDisconnectionMsg();
   } else if(gameState === GameStateEnum.GAMEFINISHED) {
     repositionGameOverMsg();
     drawJoinGameButton();
