@@ -1,4 +1,4 @@
-/*jshint esversion: 6 */ 
+/*jshint esversion: 6 */
 var mysql = require('mysql');
 var bcrypt = require('bcryptjs');
 var logger = require('./logger');
@@ -40,27 +40,27 @@ mysqlpool.getConnection(function(err, connection){
     connection.query('USE chinesecheckersdb', function (err, results, fields) {
         if (err) throw err;
         // Create Users Table if it doesn't exits
-        connection.query('CREATE TABLE IF NOT EXISTS users('
-            + 'id INT NOT NULL AUTO_INCREMENT,'
-            + 'firstname VARCHAR(30),'
-            + 'lastname VARCHAR(30),'
-            + 'username VARCHAR(30),'
-            + 'password VARCHAR(80),'
-            + 'wins INT NOT NULL,'
-            + 'losses INT NOT NULL,'
-            + 'status VARCHAR(30),'
-            + 'room VARCHAR(30),'
-            + 'socketid VARCHAR(30),'
-            + 'turn INT NOT NULL,'
-            + 'selectstatus INT NOT NULL,'
-            + 'alreadymoved INT NOT NULL,'
-            + 'istart INT NOT NULL,'
-            + 'jstart INT NOT NULL,'
-            + 'iend INT NOT NULL,'
-            + 'jend INT NOT NULL,'
-            + 'board CHAR(121),'
-            + 'PRIMARY KEY(id)'
-            +  ')',
+        connection.query('CREATE TABLE IF NOT EXISTS users(' +
+            'id INT NOT NULL AUTO_INCREMENT,' +
+            'firstname VARCHAR(30),' +
+            'lastname VARCHAR(30),' +
+            'username VARCHAR(30),' +
+            'password VARCHAR(80),' +
+            'wins INT NOT NULL,' +
+            'losses INT NOT NULL,' +
+            'status VARCHAR(30),' +
+            'room VARCHAR(30),' +
+            'socketid VARCHAR(30),' +
+            'turn INT NOT NULL,' +
+            'selectstatus INT NOT NULL,' +
+            'alreadymoved INT NOT NULL,' +
+            'istart INT NOT NULL,' +
+            'jstart INT NOT NULL,' +
+            'iend INT NOT NULL,' +
+            'jend INT NOT NULL,' +
+            'board CHAR(121),' +
+            'PRIMARY KEY(id)' +
+            ')',
             function (err, results, fields) {
               if (err) throw err;
               //logger.info(results);
