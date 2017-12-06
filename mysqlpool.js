@@ -2,6 +2,13 @@
 var mysql = require('mysql');
 var bcrypt = require('bcryptjs');
 var logger = require('./logger');
+
+var fs = require('fs');
+var configPath = './config/config.json';
+var configDb = JSON.parse(fs.readFileSync(configPath, 'UTF-8'));
+
+
+// init board template
 var initBoard  = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo";
 
 
@@ -24,11 +31,11 @@ var SelectStatusEnum = {   // flags to ndicates wether start ball has been selec
 
 // Init mysql Connection
 var mysqlpool = mysql.createPool({
-  connectionLimit : 20,
-  host            : "localhost",
-  user            : "jason",
-  password        : "esquivel",
-  dabase          : 'chinesecheckersdb'
+  connectionLimit : configDb.connectionLimit,
+  host            : configDb.host,
+  user            : configDb.user,
+  password        : configDb.password,
+  database        : configDb.database
 });
 
 
@@ -118,7 +125,7 @@ module.exports.addUser = function(firstname, lastname, username, password) {
               logger.info('Created new User with UserName : ' + username + ' id ' + results.insertId);
           });
           connection.release();
-          mysqlpool.listUsers();
+          //mysqlpool.listUsers();
         });
       });
     });

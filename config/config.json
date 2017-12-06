@@ -1,0 +1,7 @@
+{
+  "connectionLimit" : 20,
+  "host"            : "localhost",
+  "user"            : "jason",
+  "password"        : "esquivel",
+  "database"        : "chinesecheckersdb"
+}
