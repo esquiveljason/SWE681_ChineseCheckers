@@ -1,5 +1,5 @@
 // Socket connection
-/*jshint esversion: 6 */ 
+/*jshint esversion: 6 */
 var socket;
 var playerTurn;
 var cnv;            // p5 Canvas
@@ -156,6 +156,9 @@ function joinGameButtonListener() {
  * 'startGameMsg' - start game message from server - when 2 players are connected
  * 'gameOverMsg' - send Game over message to other player if sending (won) receiving (lost)
  * 'defaultWinMsg' - Automatically win other user disconnected
+ * 'userDiscMsg'   - other user has disconnected
+ * 'otherUserReCntMsg' - other user has reconnected
+ * 'userRecntMsg' - this uer has reconnected
  */
 function setUpSocket() {
   // Start socket connection to the server

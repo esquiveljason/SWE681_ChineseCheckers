@@ -1,4 +1,4 @@
-/*jshint esversion: 6 */ 
+/*jshint esversion: 6 */
 var express = require('express');
 var path = require('path');
 var bcrypt = require('bcryptjs');
@@ -51,6 +51,7 @@ router.get('/scores', ensureAuthenticated, function(request, response) {
 });
 
 router.get('/logout', ensureAuthenticated, function(request, response) {
+  logger.info(`${request.user.username} has logged out`);
   request.logout();
   request.flash('success_msg', 'You are logged out.');
   response.redirect("/");
@@ -74,7 +75,6 @@ passport.use( new LocalStrategy(
       // compare password with database password
       bcrypt.compare(password, user.password, function(err, isMatch) {
           if(isMatch) {
-            logger.info(user);
             return done(null, user);
           } else {
             return done(null, false, {message: "Invalid Username or Password. Please try again."});
