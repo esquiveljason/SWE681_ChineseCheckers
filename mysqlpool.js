@@ -1,3 +1,4 @@
+/*jshint esversion: 6 */ 
 var mysql = require('mysql');
 var bcrypt = require('bcryptjs');
 var logger = require('./logger');

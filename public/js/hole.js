@@ -33,23 +33,21 @@ Hole.prototype.show = function() {
   if(this.selected && this.status.id != HoleStatusEnum.EMPTY.id) { // do not select empty hole
     star(this.x,this.y, 4, 10, 5);
   }
-}
+};
 
 Hole.prototype.clicked = function() {
 
-  var d = dist(mouseX,mouseY,this.x,this.y)
+  var d = dist(mouseX,mouseY,this.x,this.y);
   if(d < WIDTH/2.0) {
     console.log("Clicked Hole (i,j)  : (" + this.i+","+this.j+")" );
     return true;
   }
   return false;
-}
+};
 
 Hole.prototype.setSelected = function(selected) {
   this.selected = selected;
-}
-
-Hole.prototype
+};
 
 function star(x, y, radius1, radius2, npoints) {
   push();

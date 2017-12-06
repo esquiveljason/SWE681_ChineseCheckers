@@ -1,4 +1,5 @@
 // Socket connection
+/*jshint esversion: 6 */ 
 var socket;
 var playerTurn;
 var cnv;            // p5 Canvas
