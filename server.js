@@ -1,4 +1,4 @@
-/*jshint esversion: 6 */ 
+/*jshint esversion: 6 */
 var express = require('express');
 var fs = require('fs');
 var https = require('https');
@@ -11,6 +11,7 @@ var session = require('express-session');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var routes = require('./routes/index');
+var randomize = require('randomatic');
 
 var mysqlpool = require('./mysqlpool');
 
@@ -96,9 +97,7 @@ server.listen(port, function(err) {
 // Wortk with HTTPS server
 var io = require('socket.io')(server);
 
-var roomNumber = 0; // todo use somekind of hash
 var room;
-var roomData;
 
 io.sockets.on('connection',
   // We are given a wesocket object in our function
@@ -161,7 +160,7 @@ io.sockets.on('connection',
 
             // if no room is available make room and join, send back to user
             if(room == null) {
-              room = 'room'+roomNumber;
+              room = randomize('*',30);
               logger.info("Making new Room: " + room);
               socket.join(room, function(err) {
                 if (err) throw err;
@@ -195,7 +194,6 @@ io.sockets.on('connection',
               io.sockets.in(room).emit('startGameMsg');
               console.log("Starting game in Room : " + room);
 
-              roomNumber++;
               room = null;
             }
           }
