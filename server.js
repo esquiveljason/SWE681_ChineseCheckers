@@ -212,6 +212,8 @@ io.sockets.on('connection',
         mysqlpool.updateUserStatusNotInRoom(winnerUsername, function() {});
         mysqlpool.updateUserRoom(winnerUsername, "", function() {}); // empty room for user not in game
         mysqlpool.updateUserSocketId(winnerUsername, "", function() {});
+        mysqlpool.updateUserTurn(winnerUsername, false, function () {});
+        mysqlpool.resetUserBoard(winnerUsername, function () {});
 
         mysqlpool.getOtherUserInRoom(winnerUsername, room, function(loserUser, foundUser) {
           if(!foundUser) {
@@ -221,6 +223,8 @@ io.sockets.on('connection',
             mysqlpool.updateUserStatusNotInRoom(loserUser.username, function() {});
             mysqlpool.updateUserRoom(loserUser.username, "", function() {}); // empty room for user not in game
             mysqlpool.updateUserSocketId(loserUser.username, "", function() {});
+            mysqlpool.updateUserTurn(loserUser.username, false, function () {});
+            mysqlpool.resetUserBoard(loserUser.username, function () {});
           }
         });
       });
@@ -248,6 +252,7 @@ function checkStillDisconnected(username) {
         mysqlpool.updateUserSocketId(disconnectedUser.username, "", function() {});
         mysqlpool.incrementUserLosses(disconnectedUser.username, function () {});
         mysqlpool.updateUserTurn(disconnectedUser.username, false, function () {});
+        mysqlpool.resetUserBoard(disconnectedUser.username, function () {});
 
         mysqlpool.getOtherUserInRoom(disconnectedUser.username, disconnectedUser.room, function(connectedUser, foundConnectedUser) {
           if(!foundConnectedUser) {
@@ -258,6 +263,7 @@ function checkStillDisconnected(username) {
             mysqlpool.updateUserSocketId(connectedUser.username, "", function() {});
             mysqlpool.updateUserRoom(connectedUser.username, "", function() {}); // empty room for user not in game
             mysqlpool.updateUserTurn(connectedUser.username, false, function () {});
+            mysqlpool.resetUserBoard(connectedUser.username, function () {});
 
             io.sockets.in(connectedUser.room).emit('defaultWinMsg'); //Send message to still connected User "You are winner"
           }

@@ -420,3 +420,22 @@ module.exports.updateUserBoard = function(username, selectstatus, alreadymoved, 
     });
   });
 };
+
+module.exports.resetUserBoard = function(username, selectstatus, alreadymoved, istart, jstart, iend, jend, board) {
+  var sql_stmt = 'UPDATE users SET board = ?, selectstatus = ?, alreadymoved = ?, istart = ?, jstart = ?, iend = ?, jend = ? WHERE username = ?';
+  var values = [initBoard, SelectStatusEnum.START, Boolean.FALSE, -1, -1, -1, -1, username];
+
+  sql_stmt = mysql.format(sql_stmt, values);
+
+  mysqlpool.getConnection(function(err, connection) {
+    if(err) throw err;
+    connection.query('USE chinesecheckersdb', function (err, results, fields) {
+      if (err) throw err;
+      connection.query(sql_stmt, function (err, results, fields) {
+        if(err) throw err;
+        logger.info(`Updated ${username} Board`);
+      });
+      connection.release();
+    });
+  });
+};
